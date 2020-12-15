@@ -1,0 +1,51 @@
+#ifndef GC__SYSTEM_H
+#define GC__SYSTEM_H
+
+#include "default.h"
+#include "flags.h"
+
+#include "Scheduler/scheduler.h"
+#include "Breakpoints/breakpoints.h"
+
+class Loopy {
+
+public:
+    bool Paused = false;
+    bool Shutdown = false;
+    void (*Interaction)() = nullptr;
+
+    Loopy();
+    ~Loopy();
+    void Run();
+    void Reset();
+
+    void LoadROM(std::string file_path) {
+
+        Reset();
+    }
+
+    void ReloadROM() {
+
+    }
+
+    void LoadBIOS(std::string file_path) {
+
+    }
+
+private:
+    friend class Initializer;
+
+#ifdef DO_DEBUGGER
+    u32 Stepcount = 0;
+
+# ifdef DO_BREAKPOINTS
+    s_breakpoints Breakpoints = {};
+# endif
+
+#endif
+
+    i32 timer = 0;
+    s_scheduler Scheduler = s_scheduler(&timer);
+};
+
+#endif //GC__SYSTEM_H
