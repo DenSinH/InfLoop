@@ -1,16 +1,16 @@
 #ifndef GC__DISASSEMBLY_VIEWER_H
 #define GC__DISASSEMBLY_VIEWER_H
 
-#include <stdint.h>
-#include <inttypes.h>
+#include <cstdint>
+#include <cinttypes>
 #include <cstdlib>
-#include "disassemble.h"
+
+#include "disasm.h"
 
 #include "imgui/imgui.h"
 
 #define INSTRS_BEFORE_PC 20
 #define INSTRS_AFTER_PC 20
-#define DISASM_BUFER_SIZE 0x100
 
 
 struct DisassemblyViewer
@@ -18,20 +18,14 @@ struct DisassemblyViewer
     uint32_t* PC;
     uint8_t* (*valid_address)(uint32_t address);
 
-#ifdef DO_CAPSTONE
-    csh handle;
-    cs_insn* insn;
-    char buffer[DISASM_BUFER_SIZE];
-
     DisassemblyViewer()
     {
-        init_disassembly(&handle);
+
     }
     ~DisassemblyViewer()
     {
-        close_disassembly(&handle);
+
     }
-#endif
 
     void Draw(bool* p_open)
     {
@@ -78,60 +72,29 @@ struct DisassemblyViewer
             address -= (INSTRS_BEFORE_PC << 2);
         }
 
-        address &= ~3;  // word align
-
-#ifdef DO_CAPSTONE
+        address &= ~1;  // word align
 
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++, address += 2) {
             uint8_t* loc = valid_address(address);
             if (!loc) {
                 // nullptr was returned
-                address += 4;
+                ImGui::Text("%08x:\t????\t????\t????", address);
                 continue;
             }
 
-            unsigned int instructions = disassemble(
-                    &this->handle,
-                    loc,
-                    4,
-                    address,
-                    0,
-                    &this->insn
-            );
-
-            address += 4;
-
-            // THUMB mode is severely annoying
-            if (instructions == 1 ||
-                std::abs(int(address - current_PC)) < INSTRS_BEFORE_PC * 2) {
-
-                for (int j = 0; j < instructions; j++) {
-                    if (insn[j].address == current_PC) {
-                        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 100));
-                    }
-                    if (instructions == 1) {
-                        ImGui::Text("%08" PRIx32 ":\t%08x\t%-10s\t%s",
-                                    (uint32_t)insn[j].address, *(uint32_t*)insn[j].bytes, insn[j].mnemonic, insn[j].op_str);
-                    }
-                    else {
-                        ImGui::Text("%08" PRIx32 ":\t%04x    \t%-10s\t%s",
-                                    (uint32_t)insn[j].address, *(uint16_t*)insn[j].bytes, insn[j].mnemonic, insn[j].op_str);
-                    }
-                    if (insn[j].address == current_PC) {
-                        ImGui::PopStyleColor(1);
-                    }
-                }
+            if (address == current_PC) {
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 100));
             }
 
-            free_disassembly(insn, instructions);
+            s_OpcodeInfo opcode = DisasmTable[*(uint16_t*)loc];
+            ImGui::Text("%08x:\t%08x\t%-10s", address, opcode.hex, opcode.mnemonic);
+
+            if (address == current_PC) {
+                ImGui::PopStyleColor(1);
+            }
         }
         ImGui::PopStyleVar();
-#else
-        for (int i = 0; i < count; i++) {
-            ImGui::Text("Disassembly unsupported");
-        }
-#endif
         ImGui::EndChild();
         ImGui::End();
     }

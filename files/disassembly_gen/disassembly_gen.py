@@ -36,59 +36,61 @@ for cont in html.body.findAll("div", attrs={"class": "col_cont"}):
         if "imm" in _asm and "iiiiiiii" in _bits:
             _opcodes.pop(_bits)
             for imm in range(256):
-                _opcodes[re.sub("iiiiiiii", "{0:08b}".format(imm), _bits)] = _asm.replace("imm", f"{imm}")
+                _opcodes[re.sub("iiiiiiii", "{0:08b}".format(imm), _bits)] = _asm.replace("imm", f"{hex(imm)}")
 
     for _bits, _asm in list(_opcodes.items()):
         if "disp" in _asm and "dddddddd" in _bits:
             _opcodes.pop(_bits)
             for disp in range(256):
-                _opcodes[re.sub("dddddddd", "{0:08b}".format(disp), _bits)] = _asm.replace("disp", f"{disp}")
+                _opcodes[re.sub("dddddddd", "{0:08b}".format(disp), _bits)] = _asm.replace("disp", f"{hex(disp)}")
 
     # disp is 4 bits sometimes
     for _bits, _asm in list(_opcodes.items()):
         if "disp" in _asm and "dddd" in _bits:
             _opcodes.pop(_bits)
             for disp in range(16):
-                _opcodes[re.sub("dddd", "{0:04b}".format(disp), _bits)] = _asm.replace("disp", f"{disp}")
+                _opcodes[re.sub("dddd", "{0:04b}".format(disp), _bits)] = _asm.replace("disp", f"{hex(disp)}")
 
     # bra/bf/bt/bsr opcodes
     for _bits, _asm in list(_opcodes.items()):
         if "label" in _asm and "dddddddddddd" in _bits:
             _opcodes.pop(_bits)
             for disp in range(2 ** 12):
-                _opcodes[re.sub("dddddddddddd", "{0:012b}".format(disp), _bits)] = _asm.replace("label", f"label: +2 * {disp}")
+                _opcodes[re.sub("dddddddddddd", "{0:012b}".format(disp), _bits)] = _asm.replace("label", f"label: +2 * {hex(disp)}")
+
     for _bits, _asm in list(_opcodes.items()):
         if "label" in _asm and "dddddddd" in _bits:
             _opcodes.pop(_bits)
-            for disp in range(2 ** 12):
-                _opcodes[re.sub("dddddddd", "{0:08b}".format(disp), _bits)] = _asm.replace("label", f"label: +2 * {disp}")
+            for disp in range(2 ** 8):
+                _opcodes[re.sub("dddddddd", "{0:08b}".format(disp), _bits)] = _asm.replace("label", f"label: +2 * {hex(disp)}")
 
     # for _bits, _asm in _opcodes.items():
     #     print(f"    {_bits}: {_asm}")
-    opcodes.update({b: (a, issue_cycles, latency_cycles) for b, a in _opcodes.items()})
+    opcodes.update({int(b, 2): (a, issue_cycles, latency_cycles) for b, a in _opcodes.items()})
 
 print(len(opcodes))
-for opcode in opcodes.keys():
-    if not re.match("[01]{16}", opcode):
-        print(opcode, opcodes[opcode])
 
 with open("./disasm.h", "w+") as f:
     f.write("#ifndef INFLOOP_DISASM_H\n#define INFLOOP_DISASM_H")
     f.write("\n\n#include \"default.h\"")
-    f.write("\n#include <map>")
     f.write("\n\n")
     f.write("""
 typedef struct s_OpcodeInfo {
     u16 hex;
-    const char* asm;
+    const char* mnemonic;
     int issue_cycles;
     int latency_cycles;
 } s_OpcodeInfo;
 
-const static std::map<u16, s_OpcodeInfo> DisasmTable = {""")
+static constexpr const s_OpcodeInfo DisasmTable[] = {""")
 
-    for bits, (asm, issue_cycles, latency_cycles) in opcodes.items():
-        f.write(f"\n    {{ 0b{bits}, {{ {hex(int(bits, 2))}, \"{asm}\", {issue_cycles}, {latency_cycles} }} }},")
+    for bits in range(0x10000):
+        if bits in opcodes:
+            (asm, issue_cycles, latency_cycles) = opcodes[bits]
+            f.write(f"\n    {{ {hex(bits)}, \"{asm}\", {issue_cycles}, {latency_cycles} }},")
+        else:
+            f.write(f"\n    {{ {hex(bits)}, \"????\", {0}, {0} }},")
+
     f.write("\n};")
 
     f.write("\n\n#endif")

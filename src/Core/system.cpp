@@ -59,12 +59,17 @@ void Loopy::Run() {
                     Stepcount--;
                 }
 #endif
+                // todo: for getting started:
+                Stepcount = 100;
+                break;
             }
 
-            Scheduler.DoEvents();
+            // Scheduler.DoEvents();
+            break; // todo: remove this
         }
 
-        Interaction();
-        Interaction = nullptr;
+        // todo: remove
+//        Interaction();
+//        Interaction = nullptr;
     }
 }

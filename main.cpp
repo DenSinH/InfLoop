@@ -1,3 +1,5 @@
+#include "src/Frontend/widgets/disasm.h"
+
 #include "init.h"
 #include "sleeping.h"
 

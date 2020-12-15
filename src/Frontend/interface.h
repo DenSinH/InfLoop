@@ -38,7 +38,7 @@ extern "C" {
             uint64_t mem_size,
             uint8_t* (*valid_address_mask)(uint32_t),
             uint8_t (*mem_read)(uint64_t off),
-            void (*parse_input)(s_controller* controller),
+            void (*parse_input)(s_controller* controller)
     );
 
     void add_command(const char* command, const char* description, CONSOLE_COMMAND((*callback)));
