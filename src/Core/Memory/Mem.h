@@ -4,6 +4,7 @@
 #include "MemoryHelpers.h"
 
 #include <type_traits>
+#include <string>
 #include <intrin.h>
 
 /* used for BIOS reads */
@@ -18,7 +19,10 @@ public:
     template<typename T> T Read(u32 address);
     template<typename T> void Write(u32 address, T value);
 
-    u8* GetPtr(u32 address);
+    u8 ReadByteSafe(u32 address);
+    u16 ReadInstrSafe(u32 address);
+
+    void LoadROM(const std::string& file_name);
 
 private:
     friend class Initializer;

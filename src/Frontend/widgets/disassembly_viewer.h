@@ -16,7 +16,7 @@
 struct DisassemblyViewer
 {
     uint32_t* PC;
-    uint8_t* (*valid_address)(uint32_t address);
+    uint16_t (*read_instr)(uint32_t address);
 
     DisassemblyViewer()
     {
@@ -38,7 +38,7 @@ struct DisassemblyViewer
             return;
         }
 
-        if (!valid_address || !this->PC) {
+        if (!read_instr || !this->PC) {
             // if nullptr is passed to memory, we can't disassemble anything
             // so just don't even start on the window then
             ImGui::End();
@@ -57,38 +57,24 @@ struct DisassemblyViewer
 
         ImGui::BeginChild("Disassembly");
 
-        uint32_t address = *this->PC - 4;
+        uint32_t address = *this->PC - 2;
         uint32_t current_PC = address;
 
         size_t count = INSTRS_BEFORE_PC + INSTRS_AFTER_PC + 1;
-        if (!valid_address(address + (INSTRS_AFTER_PC << 2))) {
-            count -= INSTRS_AFTER_PC;
-        }
-
-        if (!valid_address(address - (INSTRS_BEFORE_PC << 2))) {
-            count -= INSTRS_BEFORE_PC;
-        }
-        else {
-            address -= (INSTRS_BEFORE_PC << 2);
-        }
 
         address &= ~1;  // word align
+        address -= (INSTRS_BEFORE_PC << 1);
 
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         for (int i = 0; i < count; i++, address += 2) {
-            uint8_t* loc = valid_address(address);
-            if (!loc) {
-                // nullptr was returned
-                ImGui::Text("%08x:\t????\t????\t????", address);
-                continue;
-            }
+            uint16_t instr = read_instr(address);
 
             if (address == current_PC) {
                 ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 100));
             }
 
-            s_OpcodeInfo opcode = DisasmTable[*(uint16_t*)loc];
-            ImGui::Text("%08x:\t%08x\t%-10s", address, opcode.hex, opcode.mnemonic);
+            s_OpcodeInfo opcode = DisasmTable[instr];
+            ImGui::Text("%08x:\t%04x\t%-10s", address, opcode.hex, opcode.mnemonic);
 
             if (address == current_PC) {
                 ImGui::PopStyleColor(1);

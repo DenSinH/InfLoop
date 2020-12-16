@@ -40,7 +40,7 @@ extern "C" {
     void debugger_init(
             uint32_t* PC,
             uint64_t mem_size,
-            uint8_t* (*valid_address_mask)(uint32_t),
+            uint16_t (*read_instr)(uint32_t),
             uint8_t (*mem_read)(uint64_t off),
             const uint8_t* palette
     );

@@ -57,12 +57,12 @@ void add_register_data(const char* name, const void* value, size_t size, int tab
 void debugger_init(
         uint32_t* PC,
         uint64_t mem_size,
-        uint8_t* (*valid_address_mask)(uint32_t),
+        uint16_t (*read_instr)(uint32_t),
         uint8_t (*mem_read)(uint64_t off),
         const uint8_t* palette
 ) {
     Debugger.disassembly_viewer.PC = PC;
-    Debugger.disassembly_viewer.valid_address = valid_address_mask;
+    Debugger.disassembly_viewer.read_instr = read_instr;
     Debugger.memory_viewer.mem_size = mem_size;
     Debugger.memory_viewer.ReadFn = mem_read;
     Debugger.palette_viewer = PaletteViewer(palette);

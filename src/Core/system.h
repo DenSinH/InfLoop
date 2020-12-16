@@ -21,8 +21,8 @@ public:
     void Run();
     void Reset();
 
-    void LoadROM(std::string file_path) {
-
+    void LoadROM(const std::string& file_path) {
+        Mem.LoadROM(file_path);
         Reset();
     }
 

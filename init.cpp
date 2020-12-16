@@ -189,15 +189,11 @@ MENU_ITEM_CALLBACK(load_ROM) {
 }
 
 u8 Initializer::ReadByte(u64 offset) {
-    u8* ptr = loopy->Mem.GetPtr(offset);
-    if (ptr) {
-        return *ptr;
-    }
-    return 0;
+    return loopy->Mem.ReadByteSafe(offset);
 }
 
-u8* Initializer::ValidAddressMask(u32 address) {
-    return loopy->Mem.GetPtr(address);
+u16 Initializer::ReadInstr(u32 address) {
+    return loopy->Mem.ReadInstrSafe(address);
 }
 
 void Initializer::ParseInput(struct s_controller* controller) {
@@ -242,6 +238,7 @@ void Initializer::frontend_audio_destroy() {
     // loopy->APU.AudioDestroy();
 }
 
+static u32 FakePC = 0x0e00'0480 + 2;
 Loopy* Initializer::init() {
     loopy = new Loopy;
 
@@ -259,9 +256,9 @@ Loopy* Initializer::init() {
     );
 
     debugger_init(
-            nullptr, // &loopy->CPU.pc,
+            &FakePC, // &loopy->CPU.pc,
             0x1'0000'0000ULL,
-            ValidAddressMask,
+            ReadInstr,
             ReadByte,
             loopy->Mem.PRAM
     );

@@ -28,6 +28,7 @@ int main() {
 
     std::thread ui_thread(ui_run);
 
+    loopy->LoadROM("D:\\Data\\CProjects\\InfLoop\\files\\roms\\Animeland.bin");
     loopy->Run();
 
     ui_thread.join();

@@ -25,7 +25,7 @@ private:
     static OVERLAY_INFO(audio_samples);
 
     static u8 ReadByte(u64 offset);
-    static u8* ValidAddressMask(u32 address);
+    static u16 ReadInstr(u32 address);
     static void ParseInput(struct s_controller* controller);
 
     static void frontend_video_init();
