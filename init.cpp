@@ -115,6 +115,11 @@ OVERLAY_INFO(Initializer::cpu_ticks) {
 static float accum_time;
 static size_t prev_frame;
 OVERLAY_INFO(Initializer::fps_counter) {
+    SPRINTF(
+            output,
+            output_length,
+            "N/A"
+    );
 //    accum_time += delta_time;
 //    SPRINTF(
 //            output,
@@ -150,6 +155,11 @@ OVERLAY_INFO(Initializer::scheduler_time_until) {
 }
 
 OVERLAY_INFO(Initializer::audio_samples) {
+    SPRINTF(
+            output,
+            output_length,
+            "N/A"
+    );
 //    if (loopy->APU.Stream) {
 //        SPRINTF(
 //                output,
@@ -179,16 +189,15 @@ MENU_ITEM_CALLBACK(load_ROM) {
 }
 
 u8 Initializer::ReadByte(u64 offset) {
-//    u8* ptr = loopy->Memory.GetPtr(offset);
-//    if (ptr) {
-//        return *ptr;
-//    }
+    u8* ptr = loopy->Mem.GetPtr(offset);
+    if (ptr) {
+        return *ptr;
+    }
     return 0;
 }
 
 u8* Initializer::ValidAddressMask(u32 address) {
-    // all memory can be read for the GBA
-    return nullptr; // loopy->Memory.GetPtr(address);
+    return loopy->Mem.GetPtr(address);
 }
 
 void Initializer::ParseInput(struct s_controller* controller) {
@@ -246,11 +255,15 @@ Loopy* Initializer::init() {
 
     frontend_init(
             []{ loopy->Shutdown = true; loopy->Interaction = []{}; },  // need to set interaction function to break it out of the loop
+            ParseInput
+    );
+
+    debugger_init(
             nullptr, // &loopy->CPU.pc,
             0x1'0000'0000ULL,
             ValidAddressMask,
             ReadByte,
-            ParseInput
+            loopy->Mem.PRAM
     );
 
 //    char label[0x100];
@@ -261,6 +274,19 @@ Loopy* Initializer::init() {
 //        sprintf(label, "r%d", i);
 //        add_register_data(label, &loopy->CPU.Registers[i], 4, cpu_tab);
 //    }
+    add_command("RESET", "Resets the system. Add 'pause/freeze/break' to freeze on reload.", reset_system);
+    add_command("PAUSE", "Pauses the system.", pause_system);
+    add_command("CONTINUE", "Unpauses the system.", unpause_system);
+    add_command("BREAK", "Add breakpoint to system at PC = $1.", break_system);
+    add_command("UNBREAK", "Remove breakpoint to system at PC = $1.", unbreak_system);
+    add_command("STEP", "Step system for $1 CPU steps (defaults to 1 step).", step_system);
+    add_command("TRACE", "Trace system for $1 CPU steps.", trace_system);
+
+    add_overlay_info(cpu_ticks);
+    add_overlay_info(fps_counter);
+    add_overlay_info(scheduler_events);
+    add_overlay_info(scheduler_time_until);
+    add_overlay_info(audio_samples);
 
     return loopy;
 }

@@ -1,6 +1,8 @@
 #ifndef GC__SYSTEM_H
 #define GC__SYSTEM_H
 
+#include "Memory/Mem.h"
+
 #include "default.h"
 #include "flags.h"
 
@@ -46,6 +48,8 @@ private:
 
     i32 timer = 0;
     s_scheduler Scheduler = s_scheduler(&timer);
+
+    Memory Mem = Memory();
 };
 
 #endif //GC__SYSTEM_H

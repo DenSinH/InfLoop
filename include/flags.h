@@ -26,8 +26,13 @@
 #define DO_DEBUGGER
 #define DO_BREAKPOINTS
 
+// optimizations
+#define DIRTY_MEMORY_ACCESS
+
 #else
 #define VERBOSITY VERBOSITY_MAX
+
+#define DIRTY_MEMORY_ACCESS
 
 #endif
 

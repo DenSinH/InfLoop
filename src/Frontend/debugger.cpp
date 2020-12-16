@@ -8,6 +8,7 @@
 #include "widgets/register_viewer.h"
 #include "widgets/disassembly_viewer.h"
 #include "widgets/memory_viewer.h"
+#include "widgets/palette_viewer.h"
 
 #ifdef NDEBUG
 #define DEFAULT_DEBUGGER_WIDGET_STATE false
@@ -20,6 +21,7 @@ static bool show_register_viewer = DEFAULT_DEBUGGER_WIDGET_STATE;
 static bool show_disassembly_viewer = DEFAULT_DEBUGGER_WIDGET_STATE;
 static bool show_overlay = false;
 static bool show_memory_viewer = DEFAULT_DEBUGGER_WIDGET_STATE;
+static bool show_palette_viewer = DEFAULT_DEBUGGER_WIDGET_STATE;
 
 // Our state
 static struct s_debugger {
@@ -28,6 +30,7 @@ static struct s_debugger {
     DisassemblyViewer disassembly_viewer;
     Overlay overlay;
     MemoryViewer memory_viewer;
+    PaletteViewer palette_viewer;
 } Debugger;
 
 void add_command(const char* command, const char* description, CONSOLE_COMMAND((*callback))) {
@@ -55,17 +58,18 @@ void debugger_init(
         uint32_t* PC,
         uint64_t mem_size,
         uint8_t* (*valid_address_mask)(uint32_t),
-        uint8_t (*mem_read)(uint64_t off)
+        uint8_t (*mem_read)(uint64_t off),
+        const uint8_t* palette
 ) {
     Debugger.disassembly_viewer.PC = PC;
     Debugger.disassembly_viewer.valid_address = valid_address_mask;
     Debugger.memory_viewer.mem_size = mem_size;
     Debugger.memory_viewer.ReadFn = mem_read;
+    Debugger.palette_viewer = PaletteViewer(palette);
 }
 
 
 void debugger_video_init(const char* glsl_version, SDL_Window* window, SDL_GLContext* gl_context) {
-// Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
@@ -124,4 +128,6 @@ void debugger_render() {
         Debugger.overlay.Draw(&show_overlay);
     if (show_memory_viewer)
         Debugger.memory_viewer.Draw(&show_memory_viewer);
+    if (show_palette_viewer)
+        Debugger.palette_viewer.Draw(&show_palette_viewer);
 }
