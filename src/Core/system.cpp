@@ -39,7 +39,7 @@ void Loopy::Run() {
 
         while (!Interaction) {
             while (likely(!Scheduler.ShouldDoEvents())) {
-                // CPU.Step();
+                CPU.Step();
 
 //#if defined(DO_BREAKPOINTS) && defined(DO_DEBUGGER)
 //                if (check_breakpoints(&Breakpoints, CPU.pc - ((CPU.CPSR & static_cast<u32>(CPSRFlags::T)) ? 4 : 8))) {
@@ -59,17 +59,16 @@ void Loopy::Run() {
                     Stepcount--;
                 }
 #endif
-                // todo: for getting started:
-                Stepcount = 100;
-                break;
+                // todo: until we get events in the scheduler
+                if (Shutdown) {
+                    return;
+                }
             }
 
-            // Scheduler.DoEvents();
-            break; // todo: remove this
+            Scheduler.DoEvents();
         }
 
-        // todo: remove
-//        Interaction();
-//        Interaction = nullptr;
+        Interaction();
+        Interaction = nullptr;
     }
 }

@@ -1,0 +1,8 @@
+SH7021M p41
+
+Byte (8-bit) immediate data is located in the instruction code. Immediate data accessed by the
+MOV, ADD, and CMP/EQ instructions is sign-extended and is handled in registers as long word
+data. Immediate data accessed by the TST, AND, OR, and XOR instructions is zero-extended and
+is handled as long word data. Consequently, AND instructions with immediate data always clear
+the upper 24 bits of the destination register.
+

@@ -52,7 +52,7 @@ u16 Memory::ReadWordSafe(u32 address) {
         case 0x0E:
             if (address < 0x0e1f'ffff) {
                 // ROM
-                return _byteswap_ushort(ReadArray<u16>(ROM, address & 0x1f'ffff));
+                return ReadArrayBE<u16>(ROM, address & 0x1f'ffff);
             }
         default:
             return 0;
@@ -60,5 +60,5 @@ u16 Memory::ReadWordSafe(u32 address) {
 }
 
 u16 Memory::ReadPalletteEntry(int index) {
-    return _byteswap_ushort(ReadArray<u16>(PRAM, index << 1));
+    return ReadArrayBE<u16>(PRAM, index << 1);
 }

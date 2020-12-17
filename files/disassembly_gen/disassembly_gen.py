@@ -78,6 +78,7 @@ with open("./disasm.h", "w+") as f:
 typedef struct s_OpcodeInfo {
     u16 hex;
     const char* mnemonic;
+    const char* op_str;
     int issue_cycles;
     int latency_cycles;
 } s_OpcodeInfo;
@@ -87,7 +88,9 @@ static constexpr const s_OpcodeInfo DisasmTable[] = {""")
     for bits in range(0x10000):
         if bits in opcodes:
             (asm, issue_cycles, latency_cycles) = opcodes[bits]
-            f.write(f"\n    {{ {hex(bits)}, \"{asm}\", {issue_cycles}, {latency_cycles} }},")
+            mnemonic, *op_str = re.split("\s", asm, 1)
+            op_str = " ".join(op_str)
+            f.write(f"\n    {{ {hex(bits)}, \"{mnemonic}\", \"{op_str}\", {issue_cycles}, {latency_cycles} }},")
         else:
             f.write(f"\n    {{ {hex(bits)}, \"????\", {0}, {0} }},")
 

@@ -46,4 +46,5 @@ target_include_directories(Frontend PRIVATE
         ../../include
         ../../modules
         ${SDL2_INCLUDE_DIR}
+        ${PROJECT_SOURCE_DIR}/src/Common
 )

@@ -74,7 +74,7 @@ struct DisassemblyViewer
             }
 
             s_OpcodeInfo opcode = DisasmTable[instr];
-            ImGui::Text("%08x:\t%04x\t%-10s", address, opcode.hex, opcode.mnemonic);
+            ImGui::Text("%08x:\t%04x\t%-10s\t%s", address, opcode.hex, opcode.mnemonic, opcode.op_str);
 
             if (address == current_PC) {
                 ImGui::PopStyleColor(1);

@@ -19,6 +19,7 @@ public:
     template<typename T> T Read(u32 address);
     template<typename T> void Write(u32 address, T value);
 
+    // debug stuff
     u8 ReadByteSafe(u32 address);
     u16 ReadWordSafe(u32 address);
     u16 ReadPalletteEntry(int index);
@@ -44,17 +45,7 @@ T Memory::Read(u32 address) {
         case 0x0E:
             if (address < 0x0e1f'ffff) {
                 // ROM
-                // ROMs are usually dumped as big endian
-                // I dont know why, but we will need to account for this
-                if constexpr(std::is_same_v<T, u8>) {
-                    return ReadArray<u8>(ROM, address & 0x1f'ffff);
-                }
-                else if constexpr(std::is_same_v<T, u16>) {
-                    return _byteswap_ushort(ReadArray<u16>(ROM, address & 0x1f'ffff));
-                }
-                else {
-                    return _byteswap_ulong(ReadArray<u32>(ROM, address & 0x1f'ffff));
-                }
+                return ReadArrayBE<T>(ROM, address & 0x1f'ffff);
             }
         default:
             log_fatal("Unknown %dbit read from %x", sizeof(T) << 3, address);

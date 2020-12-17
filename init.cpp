@@ -238,7 +238,6 @@ void Initializer::frontend_audio_destroy() {
     // loopy->APU.AudioDestroy();
 }
 
-static u32 FakePC = 0x0e00'0480 + 2;
 Loopy* Initializer::init() {
     loopy = new Loopy;
 
@@ -256,7 +255,7 @@ Loopy* Initializer::init() {
     );
 
     debugger_init(
-            &FakePC, // &loopy->CPU.pc,
+            &loopy->CPU.PC,
             0x1'0000'0000ULL,
             ReadInstr,
             ReadByte,
