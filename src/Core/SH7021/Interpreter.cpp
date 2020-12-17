@@ -4,6 +4,6 @@
 #include "disasm.h"
 
 INTERPRETER_INSTRUCTION(unimplemented) {
-    s_OpcodeInfo instr = DisasmTable[instruction];
-    log_fatal("Unimplemented instruction %04x (%s %s) at %08x", instruction, instr.mnemonic, instr.op_str, cpu->PC - 2);
+    s_OpcodeInfo instr = DisasmTable[instruction.raw];
+    log_fatal("Unimplemented instruction %04x (%s %s) at %08x", instruction.raw, instr.mnemonic, instr.op_str, cpu->PC - 2);
 }

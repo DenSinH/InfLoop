@@ -6,3 +6,50 @@ data. Immediate data accessed by the TST, AND, OR, and XOR instructions is zero-
 is handled as long word data. Consequently, AND instructions with immediate data always clear
 the upper 24 bits of the destination register.
 
+SH7021M p136
+0 H'0000000 – H'0FFFFFF On-chip  ROM              32kB  32 —
+1 H'1000000 – H'1FFFFFF External memory           4 MB  8 CS1
+2 H'2000000 – H'2FFFFFF External memory           4 MB  8 CS2
+3 H'3000000 – H'3FFFFFF External memory           4 MB  8 CS3
+4 H'4000000 – H'4FFFFFF External memory           4 MB  8 CS4
+5 H'5000000 – H'5FFFFFF On-chip peripheral module 512 B 8/16*7 —
+6 H'6000000 – H'6FFFFFF External memory*9         4 MB  8/16*8 CS6
+                        Multiplexed I/O           4 MB
+7 H'7000000 – H'7FFFFFF External memory           4 MB  8 CS7
+0 H'8000000 – H'8FFFFFF On-chip ROM*              32kB  32 —
+1 H'9000000 – H'9FFFFFF External memory           4 MB 16 CS1
+2 H'A000000 – H'AFFFFFF External memory           4 MB 16 CS2
+3 H'B000000 – H'BFFFFFF External memory           4 MB 16 CS3
+4 H'C000000 – H'CFFFFFF External memory           4 MB 16 CS4
+5 H'D000000 – H'DFFFFFF External memory           4 MB 16 CS5
+6 H'E000000 – H'EFFFFFF External memory           4 MB 16 CS6
+7 H'F000000 – H'FFFFFFF On-chip RAM               1 kB 32 —
+
+SH7021M p192
+Table 9.2 DMAC Registers
+Channel Name                            Abbreviation   R/W    Initial Value   Address     Access Size
+0       DMA source address register 0   SAR0*3         R/W    Undefined       H'5FFFF40   16, 32
+        DMA destination address         DAR0*3         R/W    Undefined       H'5FFFF44   16, 32
+            register 0
+        DMA transfer count register 0   TCR0*3         R/W    Undefined       H'5FFFF4A   16, 32
+        DMA channel control register 0 CHCR0 R/(W)*1          H'0000          H'5FFFF4E   8, 16, 32
+
+1       DMA source address register 1   SAR1*3         R/W    Undefined       H'5FFFF50   16, 32
+        DMA destination address         DAR1*3         R/W    Undefined       H'5FFFF54   16, 32
+            register 1
+        DMA transfer count register  1  TCR1*3         R/W    Undefined        H'5FFFF5A  16, 32
+        DMA channel control register 1  CHCR1          R/(W)  H'0000           H'5FFFF5E  8, 16, 32
+
+2       DMA source address register 2   SAR2*3         R/W    Undefined        H'5FFFF60  16, 32
+        DMA destination address         DAR2*3         R/W    Undefined        H'5FFFF64  16, 32
+            register 2
+        DMA transfer count register 2   TCR2*3         R/W    Undefined        H'5FFFF6A  16, 32
+        DMA channel control register 2  CHCR2          R/(W)  H'0000           H'5FFFF6E  8, 16, 32
+
+3       DMA source address register 3   SAR3*3         R/W    Undefined        H'5FFFF70  16, 32
+        DMA destination address         DAR3*3         R/W    Undefined        H'5FFFF74  16, 32
+            register 3
+        DMA transfer count register 3   TCR3*3         R/W    Undefined        H'5FFFF7A  16, 32
+        DMA channel control register 3  CHCR3          R/(W)  H'0000           H'5FFFF7E  8, 16, 32
+        Shared DMA operation register   DMAOR          R/(W)  H'0000           H'5FFFF48  8, 16, 32
+

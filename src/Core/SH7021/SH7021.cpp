@@ -11,6 +11,6 @@ void SH7021::Step() {
     u16 opcode = Mem->Read<u16>(PC);
     PC += 2;
 
-    SH7021::instructions[opcode](this, opcode);
+    SH7021::instructions[opcode](this, s_instruction{.raw = opcode});
     (*timer)++;
 }

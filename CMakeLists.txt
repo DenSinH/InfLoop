@@ -25,6 +25,13 @@ if (CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mbmi")
 endif()
 
+if (MSVC)
+    # todo: why does this not work?
+    add_compile_options(/constexpr:steps10000000)
+else()
+    add_compile_options(-fconstexpr-steps=10000000)
+endif()
+
 # add_compile_options($<$<CONFIG:DEBUG>:-Wall>)
 add_compile_definitions(
         $<$<CONFIG:RELEASE>:NDEBUG>
