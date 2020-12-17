@@ -47,7 +47,7 @@ u8 Memory::ReadByteSafe(u32 address) {
     }
 }
 
-u16 Memory::ReadInstrSafe(u32 address) {
+u16 Memory::ReadWordSafe(u32 address) {
     switch (address >> 24) {
         case 0x0E:
             if (address < 0x0e1f'ffff) {
@@ -57,4 +57,8 @@ u16 Memory::ReadInstrSafe(u32 address) {
         default:
             return 0;
     }
+}
+
+u16 Memory::ReadPalletteEntry(int index) {
+    return _byteswap_ushort(ReadArray<u16>(PRAM, index << 1));
 }

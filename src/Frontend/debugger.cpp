@@ -59,13 +59,13 @@ void debugger_init(
         uint64_t mem_size,
         uint16_t (*read_instr)(uint32_t),
         uint8_t (*mem_read)(uint64_t off),
-        const uint8_t* palette
+        uint16_t (*palette_read)(int index)
 ) {
     Debugger.disassembly_viewer.PC = PC;
     Debugger.disassembly_viewer.read_instr = read_instr;
     Debugger.memory_viewer.mem_size = mem_size;
     Debugger.memory_viewer.ReadFn = mem_read;
-    Debugger.palette_viewer = PaletteViewer(palette);
+    Debugger.palette_viewer = PaletteViewer(palette_read);
 }
 
 

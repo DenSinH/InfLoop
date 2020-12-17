@@ -7,15 +7,15 @@
 
 class PaletteViewer {
 
-    const uint16_t* palette;
+    uint16_t (*palette_read)(int index);
 
 public:
-    PaletteViewer(const uint8_t* palette) {
-        this->palette = reinterpret_cast<const uint16_t*>(palette);
+    PaletteViewer(uint16_t (*palette_read)(int index)) {
+        this->palette_read = palette_read;
     }
 
     PaletteViewer() {
-        this->palette = nullptr;
+        this->palette_read = nullptr;
     }
 
     void Draw(bool* p_open)
@@ -39,8 +39,8 @@ public:
             float sz = ImGui::GetTextLineHeight();
             for (int j = 0; j < 16; j++) {
                 uint16_t color = 0x7fff;
-                if (palette) {
-                    color = palette[(i << 4) | j];
+                if (palette_read) {
+                    color = palette_read((i << 4) | j);
                 }
                 ImVec4 im_color = ImVec4(
                         (float)(color >> 10) / 31.0,

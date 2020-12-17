@@ -193,7 +193,7 @@ u8 Initializer::ReadByte(u64 offset) {
 }
 
 u16 Initializer::ReadInstr(u32 address) {
-    return loopy->Mem.ReadInstrSafe(address);
+    return loopy->Mem.ReadWordSafe(address);
 }
 
 void Initializer::ParseInput(struct s_controller* controller) {
@@ -260,7 +260,7 @@ Loopy* Initializer::init() {
             0x1'0000'0000ULL,
             ReadInstr,
             ReadByte,
-            loopy->Mem.PRAM
+            [](int index){ return loopy->Mem.ReadPalletteEntry(index); }
     );
 
 //    char label[0x100];

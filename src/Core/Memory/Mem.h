@@ -20,7 +20,8 @@ public:
     template<typename T> void Write(u32 address, T value);
 
     u8 ReadByteSafe(u32 address);
-    u16 ReadInstrSafe(u32 address);
+    u16 ReadWordSafe(u32 address);
+    u16 ReadPalletteEntry(int index);
 
     void LoadROM(const std::string& file_name);
 

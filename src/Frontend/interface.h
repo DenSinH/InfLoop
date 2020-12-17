@@ -42,7 +42,7 @@ extern "C" {
             uint64_t mem_size,
             uint16_t (*read_instr)(uint32_t),
             uint8_t (*mem_read)(uint64_t off),
-            const uint8_t* palette
+            uint16_t (*palette_read)(int index)
     );
 
     void add_command(const char* command, const char* description, CONSOLE_COMMAND((*callback)));
