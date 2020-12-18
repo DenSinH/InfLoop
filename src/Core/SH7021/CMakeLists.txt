@@ -3,10 +3,10 @@ add_library(SH7021 STATIC
         SH7021.cpp
         Tables.h
         Instruction.h
-        Instructions/DataTransfer.cpp
         Tables.h
         Tables.cpp
-)
+        Instructions/DataTransfer.cpp
+        Instructions/Branch.cpp)
 
 # for logging / stuff I want to use in all files
 include_directories(

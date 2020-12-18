@@ -12,7 +12,7 @@ INSTRUCTION(MOV) {
     const u8 n = instruction.nm.n;
 
     log_debug("MOVx R%d, R%d", m, n);
-    DoOperation<T, src, dest>(m, n, [](u32 src_op, u32 dest_op){ return src_op; });
+    DoOperation<T, src, dest>(m, n, instruction.raw, [](u32 src_op, u32 dest_op){ return src_op; });
 }
 
 #ifndef INLINED_INCLUDES

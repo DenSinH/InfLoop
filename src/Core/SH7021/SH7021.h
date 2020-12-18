@@ -53,6 +53,15 @@ enum class AddressingMode {
     Immediate
 };
 
+enum class ControlRegister {
+    SR,
+    GBR,
+    VBR,
+    MACH,
+    MACL,
+    PR
+};
+
 class SH7021 {
 public:
 
@@ -64,6 +73,9 @@ private:
     friend class Initializer;
     friend class SH7021INL;
     friend SH7021Instruction GetInstruction(u16 instruction);
+
+    // to prevent branches in branch delay slots
+    bool InBranchDelay = false;
 
     u32   R[16] = {};
     u32   PC    = 0x0e00'0480;  // ROM start
@@ -80,9 +92,11 @@ private:
 
     INSTRUCTION(unimplemented);
     INSTRUCTION(MOVA);
+    INSTRUCTION(BRA);
 
 #define INLINED_INCLUDES
 #include "Instructions/DataTransfer.inl"
+#include "Instructions/Control.inl"
 #undef INLINED_INCLUDES
 
     template<typename T>
@@ -99,7 +113,7 @@ private:
     }
 
     template<typename T, AddressingMode src>
-    u32 GetSrcOperand(const u8 m) {
+    ALWAYS_INLINE u32 GetSrcOperand(const u8 m, const u16 instruction) {
         switch (src) {
             case AddressingMode::DirectRegister:
                 // OP.S Rm, ...
@@ -117,16 +131,15 @@ private:
                 return SignExtend<T>(Mem->Read<T>(R[m]));
             default:
                 log_fatal("Unimplemented src addressing mode at PC = %08x", PC - 2);
-                break;
         }
     }
 
     template<typename T, AddressingMode src, AddressingMode dest>
-    void DoOperation(const u8 m, const u8 n, u32 (*operation)(u32 src_op, u32 dest_op)) {
+    ALWAYS_INLINE void DoOperation(const u8 m, const u8 n, const u16 instruction, u32 (*operation)(u32 src_op, u32 dest_op)) {
         /*
          * OP.SIZE Rm, Rn
          * */
-        u32 src_op = GetSrcOperand<T, src>(m);
+        u32 src_op = GetSrcOperand<T, src>(m, instruction);
 
         u32 dest_op;
         switch (dest) {
