@@ -57,7 +57,7 @@ struct DisassemblyViewer
 
         ImGui::BeginChild("Disassembly");
 
-        uint32_t address = *this->PC - 2;
+        uint32_t address = *this->PC;
         uint32_t current_PC = address;
 
         size_t count = INSTRS_BEFORE_PC + INSTRS_AFTER_PC + 1;

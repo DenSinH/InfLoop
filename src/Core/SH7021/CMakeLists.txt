@@ -1,11 +1,12 @@
 add_library(SH7021 STATIC
         SH7021.h
         SH7021.cpp
-        Interpreter.cpp
-        Interpreter.h
         Tables.h
         Instruction.h
-        Instructions/DataTransfer.cpp)
+        Instructions/DataTransfer.cpp
+        Tables.h
+        Tables.cpp
+)
 
 # for logging / stuff I want to use in all files
 include_directories(

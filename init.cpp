@@ -262,14 +262,22 @@ Loopy* Initializer::init() {
             [](int index){ return loopy->Mem.ReadPalletteEntry(index); }
     );
 
-//    char label[0x100];
-//
-//    int cpu_tab = add_register_tab("ARM7TDMI");
-//
-//    for (int i = 0; i < 13; i++) {
-//        sprintf(label, "r%d", i);
-//        add_register_data(label, &loopy->CPU.Registers[i], 4, cpu_tab);
-//    }
+    char label[0x100];
+
+    int cpu_tab = add_register_tab("ARM7TDMI");
+
+    for (int i = 0; i < 16; i++) {
+        sprintf(label, "r%d", i);
+        add_register_data(label, &loopy->CPU.R[i], 4, cpu_tab);
+    }
+
+    add_register_data("PC", &loopy->CPU.PC, 4, cpu_tab);
+    add_register_data("PR", &loopy->CPU.PR, 4, cpu_tab);
+    add_register_data("SR", &loopy->CPU.SR, 4, cpu_tab);
+    add_register_data("GBR", &loopy->CPU.GBR, 4, cpu_tab);
+    add_register_data("VBR", &loopy->CPU.VBR, 4, cpu_tab);
+    add_register_data("MAC", &loopy->CPU.MAC, 8, cpu_tab);
+
     add_command("RESET", "Resets the system. Add 'pause/freeze/break' to freeze on reload.", reset_system);
     add_command("PAUSE", "Pauses the system.", pause_system);
     add_command("CONTINUE", "Unpauses the system.", unpause_system);
