@@ -3,6 +3,8 @@
 #include <fstream>
 
 Memory::Memory() {
+    VRegs.Init();
+
     memset(PRAM, 0, sizeof(PRAM));
     memset(ROM, 0, sizeof(ROM));
 }

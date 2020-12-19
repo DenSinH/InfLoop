@@ -123,7 +123,7 @@ SH7021Instruction GetInstruction(u16 instruction) {
         case 0x402a:
             return &SH7021::LDS<AddressingMode::DirectRegister, StatusRegister::PR>;
         case 0x4026:
-            return &SH7021::LDS<AddressingMode::PreDecrementIndirectRegister, StatusRegister::PR>;
+            return &SH7021::LDS<AddressingMode::PostIncrementIndirectRegister, StatusRegister::PR>;
     }
 
     switch (instruction) {

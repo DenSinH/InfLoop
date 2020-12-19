@@ -1,5 +1,7 @@
 #pragma once
 
+#include "MMIOVRegs.h"
+
 #include "default.h"
 #include "MemoryHelpers.h"
 
@@ -39,6 +41,8 @@ private:
     u8 PRAM[0x200]    = {};
     u8 ROM[0x20'0000] = {};  // 2MB ROMs
 
+    MMIOVRegs VRegs = MMIOVRegs();
+
     static constexpr u8 BIOSStub[4] = {
         // RTS      NOP
         0x00, 0x0B, 0x00, 0x09
@@ -70,12 +74,16 @@ T Memory::Read(u32 address) {
                     return ReadArrayBE<T>(VRAM, address & 0x7fff);
                 case 0x051:
                     if ((address & 0xfff) < 0x200) {
-                        ReadArrayBE<T>(PRAM, address & 0x1ff);
-                        break;
+                        return ReadArrayBE<T>(PRAM, address & 0x1ff);
                     }
                     else {
                         goto unhandled;
                     }
+                case 0x058:
+                    if ((address & 0xfff) < MMIOVRegs::size) {
+                        return VRegs.Read<T, safe>(address);
+                    }
+                    goto unhandled;
                 default:
                     goto unhandled;
             }
@@ -120,6 +128,12 @@ void Memory::Write(u32 address, T value) {
                     else {
                         goto unhandled;
                     }
+                case 0x058:
+                    if ((address & 0xfff) < MMIOVRegs::size) {
+                        VRegs.Write<T>(address, value);
+                        break;
+                    }
+                    goto unhandled;
                 case 0x059:
                 case 0x05a:
                     log_warn("Unhandled write: %x to %08x", value, address);

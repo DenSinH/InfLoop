@@ -1,7 +1,7 @@
 add_library(Mem STATIC
         Mem.h
         Mem.cpp
-        MemoryHelpers.h)
+        MemoryHelpers.h MMIOBase.h MMIOVRegs.h MMIOVRegs.cpp)
 
 # for logging / stuff I want to use in all files
 include_directories(
