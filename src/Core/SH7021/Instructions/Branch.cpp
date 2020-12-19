@@ -1,31 +1,32 @@
 #include "SH7021.h"
 
 CPU_INSTRUCTION(BRA) {
-    if (unlikely(InBranchDelay)) {
-        // invalid branch delay slot
-        return;
+    if (DelayBranch()) {
+        // PC needs to be 4 ahead anyway
+        PC += (instruction.d12.d << 1);
     }
+}
 
-    // signify we are in a branch delay to prevent certain instructions (mainly branches) from happening
-    InBranchDelay = true;
-    Step();
-    InBranchDelay = false;
-
-    // PC needs to be 4 ahead anyway
-    PC += (instruction.d12.d << 1);
+CPU_INSTRUCTION(BSR) {
+    if (DelayBranch()) {
+        // PC needs to be 4 ahead anyway
+        PR = PC;
+        PC += (instruction.d12.d << 1);;
+    }
 }
 
 CPU_INSTRUCTION(JSR) {
-    if (unlikely(InBranchDelay)) {
-        // invalid branch delay slot
-        return;
+    if (DelayBranch()) {
+        // PC needs to be 4 ahead anyway
+        PR = PC;
+        PC = R[instruction.m.m];
     }
+}
 
-    InBranchDelay = true;
-    Step();
-    InBranchDelay = false;
-
-    PR = PC; // needs to be 4 bytes ahead anyway
-    PC = R[instruction.m.m];
+CPU_INSTRUCTION(RTS) {
+    if (DelayBranch()) {
+        // value of PC does not matter
+        PC = PR;
+    }
 }
 

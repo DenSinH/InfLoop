@@ -5,6 +5,7 @@
 
 #include <array>
 #include <type_traits>
+#include <functional>
 
 class SH7021;
 
@@ -95,8 +96,28 @@ private:
     INSTRUCTION(MOVA);
     INSTRUCTION(MOVIimm);
 
+    ALWAYS_INLINE bool DelayBranch() {
+        // note: PC will be 4 ahead on return "action" is executed
+        // this is what it should be according to the spec
+
+        if (unlikely(InBranchDelay)) {
+            // invalid branch delay slot
+            return false;
+        }
+
+        // signify we are in a branch delay to prevent certain instructions (mainly branches) from happening
+        InBranchDelay = true;
+        Step();
+        InBranchDelay = false;
+
+        // valid branch delay
+        return true;
+    }
+
     INSTRUCTION(BRA);
     INSTRUCTION(JSR);
+    INSTRUCTION(BSR);
+    INSTRUCTION(RTS);
 
     INSTRUCTION(NOP) {};
 
@@ -144,6 +165,9 @@ private:
                 else {
                     return SignExtend<T>(Mem->Read<T>((PC + 2) + ((instruction & 0xff) << 1)));
                 }
+            case AddressingMode::IndirectGBRDisplacement:
+                // OP.S @(disp,GBR), ...
+                return SignExtend<T>(Mem->Read<T>(GBR + sizeof(T) * (instruction & 0xff)));
             case AddressingMode::Immediate:
                 log_fatal("Cannot use immediate addressing in generic function as it is not consistent");
             default:
@@ -178,14 +202,14 @@ private:
         }
     }
 
-    template<typename T, AddressingMode src, AddressingMode dest>
+    template<typename T, AddressingMode src, AddressingMode dest, bool BinOp>
     ALWAYS_INLINE void DoOperation(const u8 m, const u8 n, const u16 instruction, u32 (*operation)(u32 src_op, u32 dest_op)) {
         /*
          * OP.SIZE Rm, Rn
          * */
         u32 src_op = GetSrcOperand<T, src>(m, instruction);
 
-        u32 dest_op;
+        u32 dest_op = 0;
         switch (dest) {
             case AddressingMode::DirectRegister:
                 // OP.S ..., Rn
@@ -193,23 +217,37 @@ private:
                 break;
             case AddressingMode::IndirectRegister:
                 // OP.S ..., @Rn
-                // todo: does this need sign extending?
-                dest_op = SignExtend<T>(Mem->Read<T>(R[n]));
+                if constexpr(BinOp) {
+                    // todo: does this need sign extending?
+                    dest_op = SignExtend<T>(Mem->Read<T>(R[n]));
+                }
                 Mem->Write<T>(R[n], operation(src_op, dest_op));
                 break;
             case AddressingMode::PostIncrementIndirectRegister:
                 // OP.S ..., @Rn+
-                // todo: does this need sign extending?
-                dest_op = SignExtend<T>(Mem->Read<T>(R[n]));
+                if constexpr(BinOp) {
+                    // todo: does this need sign extending?
+                    dest_op = SignExtend<T>(Mem->Read<T>(R[n]));
+                }
                 R[n] += sizeof(T);
                 Mem->Write<T>(R[n] - sizeof(T), operation(src_op, dest_op));
                 break;
             case AddressingMode::PreDecrementIndirectRegister:
                 // OP.S ..., @-Rn
                 R[n] -= sizeof(T);
-                // todo: does this need sign extending?
-                dest_op = SignExtend<T>(Mem->Read<T>(R[n]));
+                if constexpr(BinOp) {
+                    // todo: does this need sign extending?
+                    dest_op = SignExtend<T>(Mem->Read<T>(R[n]));
+                }
                 Mem->Write<T>(R[n], operation(src_op, dest_op));
+                break;
+            case AddressingMode::IndirectGBRDisplacement:
+                // OP.S ..., @(disp,GBR)
+                if constexpr(BinOp) {
+                    // todo: does this need sign extending?
+                    dest_op = SignExtend<T>(Mem->Read<T>(GBR + sizeof(T) * (instruction & 0xff)));
+                }
+                Mem->Write<T>(GBR + sizeof(T) * (instruction & 0xff), operation(src_op, dest_op));
                 break;
             default:
                 log_fatal("Unimplemented dest addressing mode at PC = %08x", PC - 2);

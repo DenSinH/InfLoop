@@ -13,6 +13,20 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::MOVI<u32>;
         case 0xe000 ... 0xef00:
             return &SH7021::MOVIimm;
+        case 0xb000 ... 0xbf00:
+            return &SH7021::BSR;
+        case 0xc400:
+            return &SH7021::MOVgbrdisp<u8, true>;
+        case 0xc500:
+            return &SH7021::MOVgbrdisp<u16, true>;
+        case 0xc600:
+            return &SH7021::MOVgbrdisp<u32, true>;
+        case 0xc000:
+            return &SH7021::MOVgbrdisp<u8, false>;
+        case 0xc100:
+            return &SH7021::MOVgbrdisp<u16, false>;
+        case 0xc200:
+            return &SH7021::MOVgbrdisp<u32, false>;
         default:
             break;
     }
@@ -71,6 +85,8 @@ SH7021Instruction GetInstruction(u16 instruction) {
     switch (instruction) {
         case 0x0009:
             return &SH7021::NOP;
+        case 0x000b:
+            return &SH7021::RTS;
     }
 
     return &SH7021::unimplemented;

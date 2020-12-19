@@ -37,6 +37,11 @@ private:
     u8 RAM[0x8'0000]  = {};
     u8 PRAM[0x200]    = {};
     u8 ROM[0x20'0000] = {};  // 2MB ROMs
+
+    static constexpr u8 BIOSStub[4] = {
+        // RTS      NOP
+        0x00, 0x0B, 0x00, 0x09
+    };
 };
 
 template<typename T, bool safe>
@@ -44,11 +49,16 @@ T Memory::Read(u32 address) {
     // safe mode is for debugging purposes
 
     switch (address >> 24) {
+        case 0x00:
+            if constexpr(!safe) {
+                log_warn("BIOS read @%08x", address);
+            }
+            return ReadArrayBE<T>(BIOSStub, address & 3);
         case 0x09:
             // RAM
             if (address < 0x0908'0000) {
                 // let's not just assume mirroring
-                return ReadArray<T>(RAM, address & 0x7'ffff);
+                return ReadArrayBE<T>(RAM, address & 0x7'ffff);
             }
             break;
         case 0x0E:
@@ -76,7 +86,28 @@ void Memory::Write(u32 address, T value) {
             // RAM
             WriteArrayBE<T>(RAM, address & 0x7'ffff, value);
             break;
+        case 0x04:
+        case 0x0c:
+            // mirrors, judging from Marie's emulator
+            switch ((address >> 12) & 0xfff) {
+                case 0x051:
+                    if ((address & 0xfff) < 0x200) {
+                        WriteArrayBE<T>(PRAM, address & 0x1ff, value);
+                        break;
+                    }
+                    else {
+                        goto unhandled;
+                    }
+                case 0x059:
+                case 0x05a:
+                    log_warn("Unhandled write: %x to %08x", value, address);
+                    break;
+                default:
+                    goto unhandled;
+            }
+            break;
         default:
+            unhandled:
             log_fatal("Unknown %dbit write to %x", sizeof(T) << 3, address);
             break;
     }
