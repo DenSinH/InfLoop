@@ -42,6 +42,10 @@ static ALWAYS_INLINE u32 ROTL32(u32 uval, u32 rot) {
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define CLAMP(val, min, max) MIN(max, MAX(val, min))
 
+static ALWAYS_INLINE uint32_t sext(uint32_t val, uint32_t bits) {
+    return (i32)(val << (32 - bits)) >> (32 - bits);
+}
+
 static ALWAYS_INLINE uint8_t flip_byte(uint8_t b) {
 #if __has_builtin(__builtin_bitreverse8)
     return __builtin_bitreverse8(b);

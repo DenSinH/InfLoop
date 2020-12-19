@@ -41,12 +41,12 @@ void Loopy::Run() {
             while (likely(!Scheduler.ShouldDoEvents())) {
                 CPU.Step();
 
-//#if defined(DO_BREAKPOINTS) && defined(DO_DEBUGGER)
-//                if (check_breakpoints(&Breakpoints, CPU.pc - ((CPU.CPSR & static_cast<u32>(CPSRFlags::T)) ? 4 : 8))) {
-//                    log_debug("Hit breakpoint %08x", CPU.pc - ((CPU.CPSR & static_cast<u32>(CPSRFlags::T)) ? 4 : 8));
-//                    Paused = true;
-//                }
-//#endif
+#if defined(DO_BREAKPOINTS) && defined(DO_DEBUGGER)
+                if (check_breakpoints(&Breakpoints, CPU.PC - 2)) {
+                    log_debug("Hit breakpoint %08x", CPU.PC - 2);
+                    Paused = true;
+                }
+#endif
 
 #ifdef DO_DEBUGGER
                 while (Paused && (Stepcount == 0) && !Shutdown) {

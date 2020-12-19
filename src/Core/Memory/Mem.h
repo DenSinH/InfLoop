@@ -35,6 +35,7 @@ private:
     // and from Lady Starbreeze (Marie) her WIP Casio loopy emu
     //     @ https://github.com/ladystarbreeze/lilySV100
     u8 RAM[0x8'0000]  = {};
+    u8 VRAM[0x8'0000] = {};
     u8 PRAM[0x200]    = {};
     u8 ROM[0x20'0000] = {};  // 2MB ROMs
 
@@ -61,6 +62,23 @@ T Memory::Read(u32 address) {
                 return ReadArrayBE<T>(RAM, address & 0x7'ffff);
             }
             break;
+        case 0x04:
+        case 0x0c:
+            // mirrors, judging from Marie's emulator
+            switch ((address >> 12) & 0xfff) {
+                case 0x040 ... 0x047:
+                    return ReadArrayBE<T>(VRAM, address & 0x7fff);
+                case 0x051:
+                    if ((address & 0xfff) < 0x200) {
+                        ReadArrayBE<T>(PRAM, address & 0x1ff);
+                        break;
+                    }
+                    else {
+                        goto unhandled;
+                    }
+                default:
+                    goto unhandled;
+            }
         case 0x0E:
             if (address < 0x0e1f'ffff) {
                 // ROM
@@ -68,6 +86,7 @@ T Memory::Read(u32 address) {
             }
             break;
         default:
+            unhandled:
             break;
     }
 
@@ -90,6 +109,9 @@ void Memory::Write(u32 address, T value) {
         case 0x0c:
             // mirrors, judging from Marie's emulator
             switch ((address >> 12) & 0xfff) {
+                case 0x040 ... 0x047:
+                    WriteArrayBE<T>(VRAM, address & 0x7fff, value);
+                    break;
                 case 0x051:
                     if ((address & 0xfff) < 0x200) {
                         WriteArrayBE<T>(PRAM, address & 0x1ff, value);
@@ -108,7 +130,7 @@ void Memory::Write(u32 address, T value) {
             break;
         default:
             unhandled:
-            log_fatal("Unknown %dbit write to %x", sizeof(T) << 3, address);
+            log_fatal("Unknown %dbit write %x to %x", sizeof(T) << 3, value, address);
             break;
     }
 }

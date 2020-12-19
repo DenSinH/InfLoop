@@ -59,6 +59,9 @@ enum class ControlRegister {
     SR,
     GBR,
     VBR,
+};
+
+enum class StatusRegister {
     MACH,
     MACL,
     PR
@@ -74,6 +77,7 @@ public:
 private:
     friend class Initializer;
     friend class SH7021INL;
+    friend class Loopy;
     friend SH7021Instruction GetInstruction(u16 instruction);
 
     // to prevent branches in branch delay slots
@@ -83,7 +87,7 @@ private:
     u32   PC    = 0x0e00'0480; // ROM start
     u32   PR    = 0;           // Procedure Register
     s_MAC MAC   = {.raw = 0};  // Multiply and Accumulate registers
-    s_SR  SR    = {};          // Status Register
+    s_SR  SR    = {.I = 0xf};  // Status Register
     u32   GBR   = 0;           // Global Base Register (base of GBR addressing mode)
     u32   VBR   = 0;           // Vector Base Register (base of exception vector area)
 
@@ -95,6 +99,16 @@ private:
     INSTRUCTION(unimplemented);
     INSTRUCTION(MOVA);
     INSTRUCTION(MOVIimm);
+
+    INSTRUCTION(ADD);
+    INSTRUCTION(ADDI);
+
+    INSTRUCTION(TST);
+    INSTRUCTION(TSTI);
+    INSTRUCTION(TSTB);
+    INSTRUCTION(AND);
+    INSTRUCTION(ANDI);
+    INSTRUCTION(ANDB);
 
     ALWAYS_INLINE bool DelayBranch() {
         // note: PC will be 4 ahead on return "action" is executed
@@ -124,6 +138,9 @@ private:
 #define INLINED_INCLUDES
 #include "Instructions/DataTransfer.inl"
 #include "Instructions/Control.inl"
+#include "Instructions/Branch.inl"
+#include "Instructions/Arithmetic.inl"
+#include "Instructions/Shift.inl"
 #undef INLINED_INCLUDES
 
     template<typename T>
@@ -139,7 +156,7 @@ private:
         }
     }
 
-    template<typename T, AddressingMode src>
+    template<typename T, AddressingMode src, bool sext_imm = false>
     ALWAYS_INLINE u32 GetSrcOperand(const u8 m, const u16 instruction) {
         switch (src) {
             case AddressingMode::DirectRegister:
@@ -169,7 +186,12 @@ private:
                 // OP.S @(disp,GBR), ...
                 return SignExtend<T>(Mem->Read<T>(GBR + sizeof(T) * (instruction & 0xff)));
             case AddressingMode::Immediate:
-                log_fatal("Cannot use immediate addressing in generic function as it is not consistent");
+                if constexpr(sext_imm) {
+                    return SignExtend<u8>(instruction & 0xff);
+                }
+                else {
+                    return instruction & 0xff;
+                }
             default:
                 log_fatal("Unimplemented src addressing mode at PC = %08x", PC - 2);
         }
@@ -195,6 +217,14 @@ private:
                 // OP.S ..., @-Rn
                 R[n] -= sizeof(T);
                 Mem->Write<T>(R[n], value);
+                break;
+            case AddressingMode::IndirectGBRDisplacement:
+                // OP.S ..., @(disp,GBR)
+                Mem->Write<T>(GBR + sizeof(T) * (instruction & 0xff), value);
+                break;
+            case AddressingMode::IndirectIndexedGBR:
+                // OP.S ..., @(disp,GBR)
+                Mem->Write<T>(GBR + R[0], value);
                 break;
             default:
                 log_fatal("Unimplemented dest storeback mode at PC = %08x", PC - 2);
@@ -248,6 +278,14 @@ private:
                     dest_op = SignExtend<T>(Mem->Read<T>(GBR + sizeof(T) * (instruction & 0xff)));
                 }
                 Mem->Write<T>(GBR + sizeof(T) * (instruction & 0xff), operation(src_op, dest_op));
+                break;
+            case AddressingMode::IndirectIndexedGBR:
+                // OP.S ..., @(disp,GBR)
+                if constexpr(BinOp) {
+                    // todo: does this need sign extending?
+                    dest_op = SignExtend<T>(Mem->Read<T>(GBR + R[0]));
+                }
+                Mem->Write<T>(GBR + R[0], operation(src_op, dest_op));
                 break;
             default:
                 log_fatal("Unimplemented dest addressing mode at PC = %08x", PC - 2);

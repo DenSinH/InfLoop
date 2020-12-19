@@ -1,9 +1,10 @@
 #include "SH7021.h"
+#include "helpers.h"
 
 CPU_INSTRUCTION(BRA) {
     if (DelayBranch()) {
         // PC needs to be 4 ahead anyway
-        PC += (instruction.d12.d << 1);
+        PC += (sext(instruction.d12.d, 12) << 1);
     }
 }
 
@@ -11,7 +12,7 @@ CPU_INSTRUCTION(BSR) {
     if (DelayBranch()) {
         // PC needs to be 4 ahead anyway
         PR = PC;
-        PC += (instruction.d12.d << 1);;
+        PC += (sext(instruction.d12.d, 12) << 1);;
     }
 }
 

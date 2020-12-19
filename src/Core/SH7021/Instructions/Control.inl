@@ -25,11 +25,24 @@ INSTRUCTION(LDC) {
     }
 }
 
-template<ControlRegister C, AddressingMode dest>
+template<AddressingMode src, StatusRegister S>
+INSTRUCTION(LDS) {
+    // LDS/LDS.L instructions
+    u32 value = GetSrcOperand<u32, src>(instruction.m.m, instruction.raw);
+    switch (S) {
+        case StatusRegister::PR:
+            PR = value;
+            break;
+        default:
+            log_fatal("Unimplemented status register for LDS/.L at PC = %08x", PC - 2);
+    }
+}
+
+template<StatusRegister S, AddressingMode dest>
 INSTRUCTION(STS) {
     // STS/STS.L instructions
-    switch (C) {
-        case ControlRegister::PR:
+    switch (S) {
+        case StatusRegister::PR:
             DoWriteback<u32, dest>(instruction.n.n, 0, PR);
             break;
         default:

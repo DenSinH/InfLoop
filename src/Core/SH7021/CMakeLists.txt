@@ -6,7 +6,8 @@ add_library(SH7021 STATIC
         Tables.h
         Tables.cpp
         Instructions/DataTransfer.cpp
-        Instructions/Branch.cpp)
+        Instructions/Arithmetic.cpp
+        Instructions/Branch.cpp Instructions/Logic.cpp Instructions/Branch.inl Instructions/Arithmetic.inl Instructions/Shift.inl)
 
 # for logging / stuff I want to use in all files
 include_directories(
