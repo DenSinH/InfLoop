@@ -15,3 +15,17 @@ CPU_INSTRUCTION(BRA) {
     PC += (instruction.d12.d << 1);
 }
 
+CPU_INSTRUCTION(JSR) {
+    if (unlikely(InBranchDelay)) {
+        // invalid branch delay slot
+        return;
+    }
+
+    InBranchDelay = true;
+    Step();
+    InBranchDelay = false;
+
+    PR = PC; // needs to be 4 bytes ahead anyway
+    PC = R[instruction.m.m];
+}
+

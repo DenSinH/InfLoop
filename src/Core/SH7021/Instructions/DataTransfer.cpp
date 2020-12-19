@@ -3,3 +3,7 @@
 CPU_INSTRUCTION(MOVA) {
     R[0] = ((PC + 2) & 0xffff'fffc) + (instruction.d.d << 2);
 }
+
+CPU_INSTRUCTION(MOVIimm) {
+    R[instruction.ni.n] = SignExtend<u8>(instruction.ni.i);
+}

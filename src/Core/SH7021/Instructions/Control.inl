@@ -25,6 +25,18 @@ INSTRUCTION(LDC) {
     }
 }
 
+template<ControlRegister C, AddressingMode dest>
+INSTRUCTION(STS) {
+    // STS/STS.L instructions
+    switch (C) {
+        case ControlRegister::PR:
+            DoWriteback<u32, dest>(instruction.n.n, 0, PR);
+            break;
+        default:
+            log_fatal("Unimplemented control register for STS/.L at PC = %08x", PC - 2);
+    }
+}
+
 #ifndef INLINED_INCLUDES
 };
 #endif

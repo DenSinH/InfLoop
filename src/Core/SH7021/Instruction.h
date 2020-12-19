@@ -10,6 +10,12 @@ typedef union {
     } m;
 
     struct {
+        u16 lo: 8;
+        u16 n: 4;
+        u16 hi: 4;
+    } n;
+
+    struct {
         u16 lo: 4;
         u16 m: 4;
         u16 n: 4;

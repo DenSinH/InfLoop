@@ -33,32 +33,6 @@ void Memory::LoadROM(const std::string& file_path) {
     LoadFileTo(reinterpret_cast<char *>(ROM), file_path, 0x0020'0000);
 }
 
-
-// basically the same as Read<>, but I want this for debugging purposes
-u8 Memory::ReadByteSafe(u32 address) {
-    switch (address >> 24) {
-        case 0x0E:
-            if (address < 0x0e1f'ffff) {
-                // ROM
-                return ReadArray<u8>(ROM, address & 0x1f'ffff);
-            }
-        default:
-            return 0;
-    }
-}
-
-u16 Memory::ReadWordSafe(u32 address) {
-    switch (address >> 24) {
-        case 0x0E:
-            if (address < 0x0e1f'ffff) {
-                // ROM
-                return ReadArrayBE<u16>(ROM, address & 0x1f'ffff);
-            }
-        default:
-            return 0;
-    }
-}
-
 u16 Memory::ReadPalletteEntry(int index) {
     return ReadArrayBE<u16>(PRAM, index << 1);
 }

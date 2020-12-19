@@ -7,6 +7,12 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::MOVA;
         case 0xa000 ... 0xaf00:
             return &SH7021::BRA;
+        case 0x9000 ... 0x9f00:
+            return &SH7021::MOVI<u16>;
+        case 0xd000 ... 0xdf00:
+            return &SH7021::MOVI<u32>;
+        case 0xe000 ... 0xef00:
+            return &SH7021::MOVIimm;
         default:
             break;
     }
@@ -54,6 +60,17 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::LDC<AddressingMode::PostIncrementIndirectRegister, ControlRegister::GBR>;
         case 0x4027:
             return &SH7021::LDC<AddressingMode::PostIncrementIndirectRegister, ControlRegister::VBR>;
+        case 0x400b:
+            return &SH7021::JSR;
+        case 0x002a:
+            return &SH7021::STS<ControlRegister::PR, AddressingMode::DirectRegister>;
+        case 0x4022:
+            return &SH7021::STS<ControlRegister::PR, AddressingMode::PreDecrementIndirectRegister>;
+    }
+
+    switch (instruction) {
+        case 0x0009:
+            return &SH7021::NOP;
     }
 
     return &SH7021::unimplemented;

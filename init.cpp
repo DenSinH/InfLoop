@@ -189,11 +189,11 @@ MENU_ITEM_CALLBACK(load_ROM) {
 }
 
 u8 Initializer::ReadByte(u64 offset) {
-    return loopy->Mem.ReadByteSafe(offset);
+    return loopy->Mem.Read<u8, true>(offset);
 }
 
 u16 Initializer::ReadInstr(u32 address) {
-    return loopy->Mem.ReadWordSafe(address);
+    return loopy->Mem.Read<u16, true>(address);
 }
 
 void Initializer::ParseInput(struct s_controller* controller) {
@@ -257,8 +257,8 @@ Loopy* Initializer::init() {
     debugger_init(
             &loopy->CPU.PC,
             0x1'0000'0000ULL,
-            ReadInstr,
-            ReadByte,
+            [](u32 address) { return loopy->Mem.Read<u16, true>(address); },
+            [](u64 offset) { return loopy->Mem.Read<u8, true>(offset); },
             [](int index){ return loopy->Mem.ReadPalletteEntry(index); }
     );
 

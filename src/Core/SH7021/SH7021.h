@@ -29,8 +29,9 @@ typedef union {
     };
 
     struct {
-        i64 raw: 42;
+        i64 extended: 42;
     };
+    i64 raw;
 } s_MAC;
 
 #define INSTRUCTION(_name) void _name(s_instruction instruction)
@@ -78,12 +79,12 @@ private:
     bool InBranchDelay = false;
 
     u32   R[16] = {};
-    u32   PC    = 0x0e00'0480;  // ROM start
-    u32   PR    = 0;   // Procedure Register
-    s_MAC MAC   = {};  // Multiply and Accumulate registers
-    s_SR  SR    = {};  // Status Register
-    u32   GBR   = 0;   // Global Base Register (base of GBR addressing mode)
-    u32   VBR   = 0;   // Vector Base Register (base of exception vector area)
+    u32   PC    = 0x0e00'0480; // ROM start
+    u32   PR    = 0;           // Procedure Register
+    s_MAC MAC   = {.raw = 0};  // Multiply and Accumulate registers
+    s_SR  SR    = {};          // Status Register
+    u32   GBR   = 0;           // Global Base Register (base of GBR addressing mode)
+    u32   VBR   = 0;           // Vector Base Register (base of exception vector area)
 
     i32* timer;
     Memory* Mem;
@@ -92,7 +93,12 @@ private:
 
     INSTRUCTION(unimplemented);
     INSTRUCTION(MOVA);
+    INSTRUCTION(MOVIimm);
+
     INSTRUCTION(BRA);
+    INSTRUCTION(JSR);
+
+    INSTRUCTION(NOP) {};
 
 #define INLINED_INCLUDES
 #include "Instructions/DataTransfer.inl"
@@ -129,8 +135,46 @@ private:
                 // OP.S @-Rm, ...
                 R[m] -= sizeof(T);
                 return SignExtend<T>(Mem->Read<T>(R[m]));
+            case AddressingMode::PCRelativeD8:
+                // OP.S @(d8, PC), ...
+                if constexpr(std::is_same_v<T, u32>) {
+                    // PC should be 4 bytes ahead, is 2 bytes ahead
+                    return Mem->Read<T>(((PC + 2) & 0xffff'fffc) + ((instruction & 0xff) << 2));
+                }
+                else {
+                    return SignExtend<T>(Mem->Read<T>((PC + 2) + ((instruction & 0xff) << 1)));
+                }
+            case AddressingMode::Immediate:
+                log_fatal("Cannot use immediate addressing in generic function as it is not consistent");
             default:
                 log_fatal("Unimplemented src addressing mode at PC = %08x", PC - 2);
+        }
+    }
+
+    template<typename T, AddressingMode dest>
+    ALWAYS_INLINE void DoWriteback(const u8 n, const u16 instruction, const T value) {
+        switch (dest) {
+            case AddressingMode::DirectRegister:
+                // OP.S ..., Rn
+                R[n] = value;
+                break;
+            case AddressingMode::IndirectRegister:
+                // OP.S ..., @Rn
+                Mem->Write<T>(R[n], value);
+                break;
+            case AddressingMode::PostIncrementIndirectRegister:
+                // OP.S ..., @Rn+
+                R[n] += sizeof(T);
+                Mem->Write<T>(R[n] - sizeof(T), value);
+                break;
+            case AddressingMode::PreDecrementIndirectRegister:
+                // OP.S ..., @-Rn
+                R[n] -= sizeof(T);
+                Mem->Write<T>(R[n], value);
+                break;
+            default:
+                log_fatal("Unimplemented dest storeback mode at PC = %08x", PC - 2);
+                break;
         }
     }
 
