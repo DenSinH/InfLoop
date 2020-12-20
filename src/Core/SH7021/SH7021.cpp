@@ -6,9 +6,14 @@
 std::array<SH7021Instruction, 0x10000> SH7021::instructions = [] {
     std::array<SH7021Instruction, 0x10000> table = {};
 
+    u32 count = 0;
     for (size_t i = 0; i < 0x10000; i++) {
         table[i] = GetInstruction(i);
+        if (table[i] != &SH7021::unimplemented) {
+            count++;
+        }
     }
+    log_debug("%d instructions implemented", count);
 
     return table;
 }();

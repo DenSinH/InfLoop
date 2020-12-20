@@ -3,7 +3,7 @@
 #include <fstream>
 
 Memory::Memory() {
-    VRegs.Init();
+    IOVideoInterface.Init();
 
     memset(PRAM, 0, sizeof(PRAM));
     memset(ROM, 0, sizeof(ROM));

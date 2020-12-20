@@ -76,8 +76,12 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::CMP<Condition::HS>;
         case 0x200c:
             return &SH7021::CMP<Condition::STR>;
+        case 0x3008:
+            return &SH7021::SUB;
         case 0x300c:
             return &SH7021::ADD;
+        case 0x300f:
+            return &SH7021::ADDV;
         case 0x2009:
             return &SH7021::AND;
         case 0x200b:
@@ -98,6 +102,22 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::MOV<u16, AddressingMode::IndirectRegister, AddressingMode::DirectRegister>;
         case 0x6002:
             return &SH7021::MOV<u32, AddressingMode::IndirectRegister, AddressingMode::DirectRegister>;
+        case 0x0004:
+            return &SH7021::MOV<u8, AddressingMode::DirectRegister, AddressingMode::IndirectIndexedRegister>;
+        case 0x0005:
+            return &SH7021::MOV<u16, AddressingMode::DirectRegister, AddressingMode::IndirectIndexedRegister>;
+        case 0x0006:
+            return &SH7021::MOV<u32, AddressingMode::DirectRegister, AddressingMode::IndirectIndexedRegister>;
+        case 0x000c:
+            return &SH7021::MOV<u8, AddressingMode::IndirectIndexedRegister, AddressingMode::DirectRegister>;
+        case 0x000d:
+            return &SH7021::MOV<u16, AddressingMode::IndirectIndexedRegister, AddressingMode::DirectRegister>;
+        case 0x000e:
+            return &SH7021::MOV<u32, AddressingMode::IndirectIndexedRegister, AddressingMode::DirectRegister>;
+        case 0x200e:
+            return &SH7021::MULxW<false>;
+        case 0x200f:
+            return &SH7021::MULxW<true>;
         case 0x600c:
             return &SH7021::EXTU<u8>;
         case 0x600d:
@@ -156,6 +176,12 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::SHLRn<8>;
         case 0x4049:
             return &SH7021::SHLRn<16>;
+        case 0x4021:
+            return &SH7021::SHAR;
+        case 0x4004:
+            return &SH7021::ROTL;
+        case 0x4005:
+            return &SH7021::ROTR;
         case 0x400e:
             return &SH7021::LDC<AddressingMode::DirectRegister, ControlRegister::SR>;
         case 0x401e:
@@ -170,12 +196,28 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::LDC<AddressingMode::PostIncrementIndirectRegister, ControlRegister::VBR>;
         case 0x400b:
             return &SH7021::JSR;
+        case 0x000a:
+            return &SH7021::STS<StatusRegister::MACH, AddressingMode::DirectRegister>;
+        case 0x001a:
+            return &SH7021::STS<StatusRegister::MACL, AddressingMode::DirectRegister>;
         case 0x002a:
             return &SH7021::STS<StatusRegister::PR, AddressingMode::DirectRegister>;
+        case 0x4002:
+            return &SH7021::STS<StatusRegister::MACH, AddressingMode::PreDecrementIndirectRegister>;
+        case 0x4012:
+            return &SH7021::STS<StatusRegister::MACL, AddressingMode::PreDecrementIndirectRegister>;
         case 0x4022:
             return &SH7021::STS<StatusRegister::PR, AddressingMode::PreDecrementIndirectRegister>;
+        case 0x400a:
+            return &SH7021::LDS<AddressingMode::DirectRegister, StatusRegister::MACH>;
+        case 0x401a:
+            return &SH7021::LDS<AddressingMode::DirectRegister, StatusRegister::MACL>;
         case 0x402a:
             return &SH7021::LDS<AddressingMode::DirectRegister, StatusRegister::PR>;
+        case 0x4006:
+            return &SH7021::LDS<AddressingMode::PostIncrementIndirectRegister, StatusRegister::MACH>;
+        case 0x4016:
+            return &SH7021::LDS<AddressingMode::PostIncrementIndirectRegister, StatusRegister::MACL>;
         case 0x4026:
             return &SH7021::LDS<AddressingMode::PostIncrementIndirectRegister, StatusRegister::PR>;
         case 0x402b:

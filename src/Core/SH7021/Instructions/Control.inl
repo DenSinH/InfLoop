@@ -33,6 +33,18 @@ INSTRUCTION(LDS) {
         case StatusRegister::PR:
             PR = value;
             break;
+        case StatusRegister::MACL:
+            MACL = value;
+            break;
+        case StatusRegister::MACH:
+            MACH = value;
+            if (MACH & 0x0000'0200) {
+                MACH |= 0xffff'fc00;
+            }
+            else {
+                MACH &= 0x3ff;
+            }
+            break;
         default:
             log_fatal("Unimplemented status register for LDS/.L at PC = %08x", PC - 2);
     }
@@ -62,11 +74,17 @@ INSTRUCTION(STC) {
 template<StatusRegister S, AddressingMode dest>
 INSTRUCTION(STS) {
     // STS/STS.L instructions
-    u32 value;
+    i32 value;
     switch (S) {
         case StatusRegister::PR:
             // never immediate, don't need second arg
             value = PR;
+            break;
+        case StatusRegister::MACH:
+            value = MACH;
+            break;
+        case StatusRegister::MACL:
+            value = MACL;
             break;
         default:
             log_fatal("Unimplemented control register for STS/.L at PC = %08x", PC - 2);

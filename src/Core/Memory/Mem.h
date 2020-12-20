@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MMIOVRegs.h"
+#include "VideoInterface.h"
 
 #include "default.h"
 #include "MemoryHelpers.h"
@@ -37,11 +37,11 @@ private:
     // and from Lady Starbreeze (Marie) her WIP Casio loopy emu
     //     @ https://github.com/ladystarbreeze/lilySV100
     u8 RAM[0x8'0000]  = {};
-    u8 VRAM[0x8'0000] = {};
+    u8 VRAM[0x1'0000] = {};
     u8 PRAM[0x200]    = {};
     u8 ROM[0x20'0000] = {};  // 2MB ROMs
 
-    MMIOVRegs VRegs = MMIOVRegs();
+    VideoInterface IOVideoInterface = VideoInterface();
 
     static constexpr u8 BIOSStub[4] = {
         // RTS      NOP
@@ -75,8 +75,8 @@ T Memory::Read(u32 address) {
         case 0x0c:
             // mirrors, judging from Marie's emulator
             switch ((address >> 12) & 0xfff) {
-                case 0x040 ... 0x047:
-                    return ReadArrayBE<T>(VRAM, address & 0x7fff);
+                case 0x040 ... 0x04f:
+                    return ReadArrayBE<T>(VRAM, address & 0xffff);
                 case 0x051:
                     if ((address & 0xfff) < 0x200) {
                         return ReadArrayBE<T>(PRAM, address & 0x1ff);
@@ -85,10 +85,11 @@ T Memory::Read(u32 address) {
                         goto unhandled;
                     }
                 case 0x058:
-                    if ((address & 0xfff) < MMIOVRegs::size) {
-                        return VRegs.Read<T, safe>(address);
+                    if ((address & 0xfff) < VideoInterface::size) {
+                        return IOVideoInterface.Read<T, safe>(address);
                     }
                     goto unhandled;
+                case 0x059:
                 case 0x05d:
                     /*
                      * Reads:
@@ -98,6 +99,7 @@ T Memory::Read(u32 address) {
                      *          0c05d012
                      *          0c05d012
                      * */
+                case 0x05e:
                     log_warn("Unhandled read: %08x", address);
                     return 0;
                 default:
@@ -147,8 +149,8 @@ void Memory::Write(u32 address, T value) {
         case 0x0c:
             // mirrors, judging from Marie's emulator
             switch ((address >> 12) & 0xfff) {
-                case 0x040 ... 0x047:
-                    WriteArrayBE<T>(VRAM, address & 0x7fff, value);
+                case 0x040 ... 0x04f:
+                    WriteArrayBE<T>(VRAM, address & 0xffff, value);
                     return;
                 case 0x051:
                     if ((address & 0xfff) < 0x200) {
@@ -159,8 +161,8 @@ void Memory::Write(u32 address, T value) {
                         goto unhandled;
                     }
                 case 0x058:
-                    if ((address & 0xfff) < MMIOVRegs::size) {
-                        VRegs.Write<T>(address, value);
+                    if ((address & 0xfff) < VideoInterface::size) {
+                        IOVideoInterface.Write<T>(address, value);
                         return;
                     }
                     goto unhandled;
@@ -188,7 +190,12 @@ void Memory::Write(u32 address, T value) {
                      * Animeland:
                      *      4 to c05b000
                      * */
+                case 0x05e:
                     log_warn("Unhandled write: %x to %08x", value, address);
+                    return;
+                case 0x05f:
+                    // This holds 0x80 ushorts of values
+                    // Could this be some alternative PRAM (sticker printer?)
                     return;
                 default:
                     goto unhandled;

@@ -276,7 +276,13 @@ Loopy* Initializer::init() {
     add_register_data("SR", &loopy->CPU.SR, 4, cpu_tab);
     add_register_data("GBR", &loopy->CPU.GBR, 4, cpu_tab);
     add_register_data("VBR", &loopy->CPU.VBR, 4, cpu_tab);
-    add_register_data("MAC", &loopy->CPU.MAC, 8, cpu_tab);
+    add_register_data("MACL", &loopy->CPU.MACL, 4, cpu_tab);
+    add_register_data("MACH", &loopy->CPU.MACH, 4, cpu_tab);
+
+    int vreg_tab = add_register_tab("Video");
+
+    add_register_data("c058004", &loopy->Mem.IOVideoInterface.VTR, 2, vreg_tab);
+
 
     add_command("RESET", "Resets the system. Add 'pause/freeze/break' to freeze on reload.", reset_system);
     add_command("PAUSE", "Pauses the system.", pause_system);

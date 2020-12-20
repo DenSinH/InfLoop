@@ -8,18 +8,18 @@
 
 #include <array>
 
-template<size_t size> class MMIOBase;
+template<size_t size, class c> class MMIOBase;
 
 #define READ_PRECALL(_name) u16 _name()
 #define WRITE_CALLBACK(_name) void _name(u16 value)
 
-class AbstractIO {};
+template<class c>
+using IOWriteCallback = void (c::*)(u16 value);
+template<class c>
+using IOReadPrecall   = u16 (c::*)();
 
-using IOWriteCallback = void (AbstractIO::*)(u16 value);
-using IOReadPrecall   = u16 (AbstractIO::*)();
-
-template<size_t s>
-class MMIOBase : AbstractIO {
+template<size_t s, class c>
+class MMIOBase {
 
     // s must be > 0 and a power of 2, otherwise our logic in reading/writing does not work
     static_assert(s && ((s & (s - 1)) == 0));
@@ -37,32 +37,29 @@ public:
 
 protected:
 
-    u8 Registers[s] = {};
-
     void SetImplemented(u32 address) {
         Implemented[address >> 1] = true;
     }
 
-    template<class Cb>
-    void SetWriteCallback(u32 address, Cb cb) {
-        WriteCallback[address >> 1] = static_cast<IOWriteCallback>(cb);
+    void SetWriteCallback(u32 address, IOWriteCallback<c> cb) {
+        WriteCallback[address >> 1] = cb;
     }
 
-    template<class Cb>
-    void SetReadPrecall(u32 address, Cb cb) {
-        ReadPrecall[address >> 1] = static_cast<IOReadPrecall>(cb);
+    void SetReadPrecall(u32 address, IOReadPrecall<c> cb) {
+        ReadPrecall[address >> 1] = cb;
     }
 
 private:
-    std::array<bool, (s >> 1)> Implemented = {false};
-    std::array<IOWriteCallback, (s >> 1)> WriteCallback = {nullptr};
-    std::array<IOReadPrecall, (s >> 1)> ReadPrecall     = {nullptr};
 
+    std::array<bool, (s >> 1)> Implemented = {false};
+    u8 Registers[s] = {};
+    std::array<IOWriteCallback<c>, (s >> 1)> WriteCallback = {nullptr};
+    std::array<IOReadPrecall<c>, (s >> 1)> ReadPrecall     = {nullptr};
 };
 
-template<size_t s>
+template<size_t s, class c>
 template<typename T, bool safe>
-inline T MMIOBase<s>::Read(u32 address) {
+inline T MMIOBase<s, c>::Read(u32 address) {
     if constexpr (safe) {
         return ReadArrayBE<T>(Registers, address & (s - 1));
     }
@@ -78,10 +75,10 @@ inline T MMIOBase<s>::Read(u32 address) {
     if constexpr (std::is_same_v<T, u32>) {
         // 32 bit writes are a little different
         if (unlikely(ReadPrecall[address >> 1])) {
-            WriteArray<u16>(Registers, address, ((this)->*ReadPrecall[address >> 1])());
+            WriteArray<u16>(Registers, address, (reinterpret_cast<c*>(this)->*ReadPrecall[address >> 1])());
         }
         if (unlikely(ReadPrecall[1 + (address >> 1)])) {
-            WriteArray<u16>(Registers, address + 2, ((this)->*ReadPrecall[1 + (address >> 1)])());
+            WriteArray<u16>(Registers, address + 2, (reinterpret_cast<c*>(this)->*ReadPrecall[1 + (address >> 1)])());
         }
 
         return ReadArrayBE<T>(Registers, address);
@@ -89,7 +86,7 @@ inline T MMIOBase<s>::Read(u32 address) {
     else if constexpr (std::is_same_v<T, u16>) {
         if (unlikely(ReadPrecall[address >> 1])) {
             // no need for indirections for 16 bit reads
-            return (this->*ReadPrecall[address >> 1])();
+            return (reinterpret_cast<c*>(this)->*ReadPrecall[address >> 1])();
         }
         return ReadArrayBE<u16>(Registers, address);
     }
@@ -99,17 +96,17 @@ inline T MMIOBase<s>::Read(u32 address) {
             // remember BIG Endianness!
             if (address & 1) {
                 // misaligned
-                return (u8)((this)->*ReadPrecall[address >> 1])();
+                return (u8)(reinterpret_cast<c*>(this)->*ReadPrecall[address >> 1])();
             }
-            return ((this)->*ReadPrecall[address >> 1])() >> 8;
+            return (reinterpret_cast<c*>(this)->*ReadPrecall[address >> 1])() >> 8;
         }
         return ReadArrayBE<u8>(Registers, address);
     }
 }
 
-template<size_t s>
+template<size_t s, class c>
 template<typename T>
-inline void MMIOBase<s>::Write(u32 address, T value) {
+inline void MMIOBase<s, c>::Write(u32 address, T value) {
     if (!Implemented[(address & (s - 1)) >> 1]) {
         log_fatal("Unimplemented IO access at %08x", address);
     }
@@ -121,19 +118,19 @@ inline void MMIOBase<s>::Write(u32 address, T value) {
         // Remember Big Endianness!
         WriteArrayBE<u16>(Registers, address, value);
         if (WriteCallback[address >> 1]) {
-            (this->*WriteCallback[address >> 1])(value >> 16);
+            (reinterpret_cast<c*>(this)->*WriteCallback[address >> 1])(value >> 16);
         }
 
         WriteArrayBE<u16>(Registers, address + 2, value >> 16);
         if (WriteCallback[1 + (address >> 1)]) {
-            (this->*WriteCallback[1 + (address >> 1)])(value);
+            (reinterpret_cast<c*>(this)->*WriteCallback[1 + (address >> 1)])(value);
         }
     }
     else if constexpr (std::is_same_v<T, u16>) {
         WriteArrayBE<u16>(Registers, address, value);
 
         if (WriteCallback[address >> 1]) {
-            (this->*WriteCallback[address >> 1])(value);
+            (reinterpret_cast<c*>(this)->*WriteCallback[address >> 1])(value);
         }
     }
     else {
@@ -143,7 +140,7 @@ inline void MMIOBase<s>::Write(u32 address, T value) {
         if (WriteCallback[address >> 1]) {
             // We have to be careful with this:
             // writemask is already applied
-            (this->*WriteCallback[address >> 1])(ReadArrayBE<u16>(Registers, address));
+            (reinterpret_cast<c*>(this)->*WriteCallback[address >> 1])(ReadArrayBE<u16>(Registers, address));
         }
     }
 }

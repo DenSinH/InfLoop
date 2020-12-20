@@ -23,18 +23,6 @@ typedef union {
     u32 raw;
 } s_SR;
 
-typedef union {
-    struct {
-        u64 MACL: 32;
-        i64 MACH: 10;
-    };
-
-    struct {
-        i64 extended: 42;
-    };
-    i64 raw;
-} s_MAC;
-
 #define INSTRUCTION(_name) void _name(s_instruction instruction)
 #define CPU_INSTRUCTION(_name) INSTRUCTION(SH7021::_name)
 typedef INSTRUCTION((SH7021::*SH7021Instruction));
@@ -99,7 +87,8 @@ private:
     u32   R[16] = {};
     u32   PC    = 0x0e00'0480; // ROM start
     u32   PR    = 0;           // Procedure Register
-    s_MAC MAC   = {.raw = 0};  // Multiply and Accumulate registers
+    u32   MACL  = 0;           // Multiply and Accumulate registers
+    u32   MACH  = 0;           // Multiply and Accumulate registers
     s_SR  SR    = {.I = 0xf};  // Status Register
     u32   GBR   = 0;           // Global Base Register (base of GBR addressing mode)
     u32   VBR   = 0;           // Vector Base Register (base of exception vector area)
@@ -115,6 +104,9 @@ private:
 
     INSTRUCTION(ADD);
     INSTRUCTION(ADDI);
+    INSTRUCTION(ADDV);
+
+    INSTRUCTION(SUB);
 
     INSTRUCTION(TST);
     INSTRUCTION(TSTI);
@@ -128,6 +120,9 @@ private:
 
     INSTRUCTION(SHLL);
     INSTRUCTION(SHLR);
+    INSTRUCTION(SHAR);
+    INSTRUCTION(ROTL);
+    INSTRUCTION(ROTR);
 
     ALWAYS_INLINE bool DelayBranch() {
         // note: PC will be 4 ahead on return "action" is executed
@@ -216,6 +211,8 @@ private:
                 }
             case AddressingMode::IndirectRegisterDisplacement:
                 return SignExtend<T>(Mem->Read<T>(R[m] + (instruction & 0xf) * sizeof(T)));
+            case AddressingMode::IndirectIndexedRegister:
+                return SignExtend<T>(Mem->Read<T>(R[m] + R[0]));
             default:
                 log_fatal("Unimplemented src addressing mode at PC = %08x", PC - 2);
         }
@@ -251,7 +248,11 @@ private:
                 Mem->Write<T>(GBR + R[0], value);
                 break;
             case AddressingMode::IndirectRegisterDisplacement:
-                return Mem->Write<T>(R[n] + (instruction & 0xf) * sizeof(T), value);
+                Mem->Write<T>(R[n] + (instruction & 0xf) * sizeof(T), value);
+                break;
+            case AddressingMode::IndirectIndexedRegister:
+                Mem->Write<T>(R[n] + R[0], value);
+                break;
             default:
                 log_fatal("Unimplemented dest storeback mode at PC = %08x", PC - 2);
                 break;
@@ -319,6 +320,13 @@ private:
                     dest_op = SignExtend<T>(Mem->Read<T>(R[n] + (instruction & 0xf) * sizeof(T)));
                 }
                 Mem->Write<T>(R[n] + (instruction & 0xf) * sizeof(T), operation(src_op, dest_op));
+                break;
+            case AddressingMode::IndirectIndexedRegister:
+                if constexpr(BinOp) {
+                    // todo: does this need sign extending?
+                    dest_op = SignExtend<T>(Mem->Read<T>(R[n] + R[0]));
+                }
+                Mem->Write<T>(R[n] + R[0], operation(src_op, dest_op));
                 break;
             default:
                 log_fatal("Unimplemented dest addressing mode at PC = %08x", PC - 2);

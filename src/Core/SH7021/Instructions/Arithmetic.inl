@@ -6,6 +6,17 @@ class SH7021INL : SH7021 {
 
 #endif
 
+template<bool S>
+INSTRUCTION(MULxW) {
+    if constexpr(S) {
+        // signed
+        MACL = (u32)((i16)R[instruction.nm.n] * (i16)R[instruction.nm.m]);
+    }
+    else {
+        MACL = R[instruction.nm.n] * R[instruction.nm.m];
+    }
+}
+
 template<typename T>
 INSTRUCTION(EXTU) {
     R[instruction.nm.n] = (T)R[instruction.nm.m];
