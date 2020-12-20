@@ -85,6 +85,7 @@ public:
     SH7021(Memory* Mem, i32* timer);
 
     void Step();
+    void BIOSCall();
 
 private:
     friend class Initializer;

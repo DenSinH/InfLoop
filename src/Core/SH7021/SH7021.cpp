@@ -25,9 +25,15 @@ CPU_INSTRUCTION(unimplemented) {
 
 
 void SH7021::Step() {
-    u16 opcode = Mem->Read<u16>(PC);
-    PC += 2;
+    if (likely(PC > 0x0100'0000)) {
+        u16 opcode = Mem->Read<u16>(PC);
+        PC += 2;
 
-    (this->*SH7021::instructions[opcode])(s_instruction{.raw = opcode});
+        (this->*SH7021::instructions[opcode])(s_instruction{.raw = opcode});
+    }
+    else {
+        PC += 2;
+        BIOSCall();
+    }
     (*timer)++;
 }

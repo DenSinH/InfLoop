@@ -53,7 +53,7 @@ INSTRUCTION(MOVregdisp) {
             m = instruction.nm.m;
             n = 0;
         }
-        
+
         DoOperation<T, AddressingMode::IndirectRegisterDisplacement, AddressingMode::DirectRegister, false>(
                 m, n, instruction.raw, [](u32 src_op, u32 dest_op){ return src_op; }
         );
