@@ -13,7 +13,7 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::MOVregdisp<u32, false>;
         case 0x8400:
             return &SH7021::MOVregdisp<u8, true>;
-        case 0x8501:
+        case 0x8500:
             return &SH7021::MOVregdisp<u16, true>;
         case 0x5000 ... 0x5f00:
             return &SH7021::MOVregdisp<u32, true>;
@@ -140,12 +140,16 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::CMP<Condition::PL>;
         case 0x4011:
             return &SH7021::CMP<Condition::PZ>;
+        case 0x4000:
+            return &SH7021::SHLL;
         case 0x4008:
             return &SH7021::SHLLn<2>;
         case 0x4018:
             return &SH7021::SHLLn<8>;
         case 0x4048:
             return &SH7021::SHLLn<16>;
+        case 0x4001:
+            return &SH7021::SHLR;
         case 0x4009:
             return &SH7021::SHLRn<2>;
         case 0x4019:

@@ -126,6 +126,9 @@ private:
     INSTRUCTION(ORI);
     INSTRUCTION(ORB);
 
+    INSTRUCTION(SHLL);
+    INSTRUCTION(SHLR);
+
     ALWAYS_INLINE bool DelayBranch() {
         // note: PC will be 4 ahead on return "action" is executed
         // this is what it should be according to the spec
@@ -159,6 +162,8 @@ private:
 #include "Instructions/Arithmetic.inl"
 #include "Instructions/Shift.inl"
 #undef INLINED_INCLUDES
+
+    void BIOSMemcpy66d0();
 
     template<typename T>
     static constexpr ALWAYS_INLINE u32 SignExtend(T value) {

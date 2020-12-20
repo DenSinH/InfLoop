@@ -32,7 +32,6 @@ void SH7021::Step() {
         (this->*SH7021::instructions[opcode])(s_instruction{.raw = opcode});
     }
     else {
-        PC += 2;
         BIOSCall();
     }
     (*timer)++;

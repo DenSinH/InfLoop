@@ -3,18 +3,17 @@
 #include "MMIOBase.h"
 
 // size of this is just a guess
-class MMIOVRegs : public MMIOBase<0x100, MMIOVRegs> {
+class MMIOVRegs : public MMIOBase<0x100> {
 
 public:
-    MMIOVRegs() : MMIOBase<256, MMIOVRegs>() {
+    MMIOVRegs() : MMIOBase<256>() {
 
     }
 
     constexpr void Init() override {
-        Implemented[0x4 >> 1] = true;
-
-        ReadPrecall[0x4 >> 1] = &MMIOVRegs::ReadDISPSTAT;
-        WriteCallback[0x4 >> 1] = &MMIOVRegs::WriteDISPSTAT;
+        SetImplemented(0x4);
+        SetReadPrecall(0x4, &MMIOVRegs::ReadDISPSTAT);
+        SetWriteCallback(0x4, &MMIOVRegs::WriteDISPSTAT);
     }
 
 protected:

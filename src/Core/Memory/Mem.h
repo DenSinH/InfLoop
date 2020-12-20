@@ -90,6 +90,14 @@ T Memory::Read(u32 address) {
                     }
                     goto unhandled;
                 case 0x05d:
+                    /*
+                     * Reads:
+                     *      Animeland:
+                     *          0c05d010
+                     *          0c05d010
+                     *          0c05d012
+                     *          0c05d012
+                     * */
                     log_warn("Unhandled read: %08x", address);
                     return 0;
                 default:
@@ -157,7 +165,29 @@ void Memory::Write(u32 address, T value) {
                     }
                     goto unhandled;
                 case 0x059:
+                    /*
+                     * Writes:
+                     * Animeland:
+                     *      4 to 0c059030
+                     * */
                 case 0x05a:
+                    /*
+                     * Writes:
+                     * Animeland:
+                     *      15   to 0c05a000
+                     *      0    to 0c05a002
+                     *      0    to 0c05a004
+                     *      8    to 0c05a006
+                     *      1c0  to 0c05a008
+                     *      a987 to 0c05a00a
+                     *      fedc to 0c05a00c
+                     * */
+                case 0x05b:
+                    /*
+                     * Writes:
+                     * Animeland:
+                     *      4 to c05b000
+                     * */
                     log_warn("Unhandled write: %x to %08x", value, address);
                     return;
                 default:
