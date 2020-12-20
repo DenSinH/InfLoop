@@ -44,3 +44,20 @@ CPU_INSTRUCTION(ANDB) {
 
     DoWriteback<u8, AddressingMode::IndirectIndexedGBR>(0, 0, instruction.i.i & op2);
 }
+
+CPU_INSTRUCTION(OR) {
+    const u8 n = instruction.nm.n;
+    const u8 m = instruction.nm.m;
+
+    R[n] |= R[m];
+}
+
+CPU_INSTRUCTION(ORI) {
+    R[0] |= instruction.i.i;
+}
+
+CPU_INSTRUCTION(ORB) {
+    u16 op2 = GetSrcOperand<u8, AddressingMode::IndirectIndexedGBR>(0, 0);
+
+    DoWriteback<u8, AddressingMode::IndirectIndexedGBR>(0, 0, instruction.i.i | op2);
+}

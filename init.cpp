@@ -264,7 +264,7 @@ Loopy* Initializer::init() {
 
     char label[0x100];
 
-    int cpu_tab = add_register_tab("ARM7TDMI");
+    int cpu_tab = add_register_tab("SH7021");
 
     for (int i = 0; i < 16; i++) {
         sprintf(label, "r%d", i);

@@ -47,6 +47,11 @@ private:
         // RTS      NOP
         0x00, 0x0B, 0x00, 0x09
     };
+
+    struct {
+        u16 DMAOR;   // 0x05ff'ff48
+        u16 IPR[5];  // A - E, 0x05ff'ff84, 86, 88, 8a, 8c
+    } InternalIO;
 };
 
 template<typename T, bool safe>
@@ -84,6 +89,9 @@ T Memory::Read(u32 address) {
                         return VRegs.Read<T, safe>(address);
                     }
                     goto unhandled;
+                case 0x05d:
+                    log_warn("Unhandled read: %08x", address);
+                    return 0;
                 default:
                     goto unhandled;
             }
@@ -112,18 +120,32 @@ void Memory::Write(u32 address, T value) {
         case 0x09:
             // RAM
             WriteArrayBE<T>(RAM, address & 0x7'ffff, value);
-            break;
+            return;
+        case 0x05:
+            if constexpr(std::is_same_v<T, u16>) {
+                switch (address) {
+                    case 0x05ff'ff48:
+                        InternalIO.DMAOR = value;
+                        return;
+                    case 0x05ff'ff84 ... 0x05ff'ff8c:
+                        InternalIO.IPR[(address - 0x05ff'ff84) >> 1] = value;
+                        return;
+                    default:
+                        break;
+                }
+            }
+            goto unhandled;
         case 0x04:
         case 0x0c:
             // mirrors, judging from Marie's emulator
             switch ((address >> 12) & 0xfff) {
                 case 0x040 ... 0x047:
                     WriteArrayBE<T>(VRAM, address & 0x7fff, value);
-                    break;
+                    return;
                 case 0x051:
                     if ((address & 0xfff) < 0x200) {
                         WriteArrayBE<T>(PRAM, address & 0x1ff, value);
-                        break;
+                        return;
                     }
                     else {
                         goto unhandled;
@@ -131,13 +153,13 @@ void Memory::Write(u32 address, T value) {
                 case 0x058:
                     if ((address & 0xfff) < MMIOVRegs::size) {
                         VRegs.Write<T>(address, value);
-                        break;
+                        return;
                     }
                     goto unhandled;
                 case 0x059:
                 case 0x05a:
                     log_warn("Unhandled write: %x to %08x", value, address);
-                    break;
+                    return;
                 default:
                     goto unhandled;
             }
@@ -145,6 +167,5 @@ void Memory::Write(u32 address, T value) {
         default:
             unhandled:
             log_fatal("Unknown %dbit write %x to %x", sizeof(T) << 3, value, address);
-            break;
     }
 }

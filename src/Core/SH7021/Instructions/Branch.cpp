@@ -24,6 +24,12 @@ CPU_INSTRUCTION(JSR) {
     }
 }
 
+CPU_INSTRUCTION(JMP) {
+    if (DelayBranch()) {
+        PC = R[instruction.m.m];
+    }
+}
+
 CPU_INSTRUCTION(RTS) {
     if (DelayBranch()) {
         // value of PC does not matter

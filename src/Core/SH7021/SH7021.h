@@ -67,6 +67,18 @@ enum class StatusRegister {
     PR
 };
 
+enum class Condition {
+    EQ,
+    GE,
+    GT,
+    HI,
+    HS,
+    PL,
+    PZ,
+    STR,
+    EQimm
+};
+
 class SH7021 {
 public:
 
@@ -109,6 +121,9 @@ private:
     INSTRUCTION(AND);
     INSTRUCTION(ANDI);
     INSTRUCTION(ANDB);
+    INSTRUCTION(OR);
+    INSTRUCTION(ORI);
+    INSTRUCTION(ORB);
 
     ALWAYS_INLINE bool DelayBranch() {
         // note: PC will be 4 ahead on return "action" is executed
@@ -130,6 +145,7 @@ private:
 
     INSTRUCTION(BRA);
     INSTRUCTION(JSR);
+    INSTRUCTION(JMP);
     INSTRUCTION(BSR);
     INSTRUCTION(RTS);
 
@@ -192,6 +208,8 @@ private:
                 else {
                     return instruction & 0xff;
                 }
+            case AddressingMode::IndirectRegisterDisplacement:
+                return SignExtend<T>(Mem->Read<T>(R[m] + (instruction & 0xf) * sizeof(T)));
             default:
                 log_fatal("Unimplemented src addressing mode at PC = %08x", PC - 2);
         }
@@ -226,6 +244,8 @@ private:
                 // OP.S ..., @(disp,GBR)
                 Mem->Write<T>(GBR + R[0], value);
                 break;
+            case AddressingMode::IndirectRegisterDisplacement:
+                return Mem->Write<T>(R[n] + (instruction & 0xf) * sizeof(T), value);
             default:
                 log_fatal("Unimplemented dest storeback mode at PC = %08x", PC - 2);
                 break;
@@ -286,6 +306,13 @@ private:
                     dest_op = SignExtend<T>(Mem->Read<T>(GBR + R[0]));
                 }
                 Mem->Write<T>(GBR + R[0], operation(src_op, dest_op));
+                break;
+            case AddressingMode::IndirectRegisterDisplacement:
+                if constexpr(BinOp) {
+                    // todo: does this need sign extending?
+                    dest_op = SignExtend<T>(Mem->Read<T>(R[n] + (instruction & 0xf) * sizeof(T)));
+                }
+                Mem->Write<T>(R[n] + (instruction & 0xf) * sizeof(T), operation(src_op, dest_op));
                 break;
             default:
                 log_fatal("Unimplemented dest addressing mode at PC = %08x", PC - 2);

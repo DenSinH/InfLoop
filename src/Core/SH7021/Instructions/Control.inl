@@ -38,16 +38,40 @@ INSTRUCTION(LDS) {
     }
 }
 
+template<ControlRegister C, AddressingMode dest>
+INSTRUCTION(STC) {
+    // STC/STS.C instructions
+    u32 value;
+    switch (C) {
+        case ControlRegister::SR:
+            value = SR.raw;
+            break;
+        case ControlRegister::VBR:
+            value = VBR;
+            break;
+        case ControlRegister::GBR:
+            value = GBR;
+            break;
+        default:
+            log_fatal("Invalid control register for LDC/.L at PC = %08x", PC - 2);
+    }
+    // never immediate, don't need second arg
+    DoWriteback<u32, dest>(instruction.n.n, 0, PR);
+}
+
 template<StatusRegister S, AddressingMode dest>
 INSTRUCTION(STS) {
     // STS/STS.L instructions
+    u32 value;
     switch (S) {
         case StatusRegister::PR:
-            DoWriteback<u32, dest>(instruction.n.n, 0, PR);
+            // never immediate, don't need second arg
+            value = PR;
             break;
         default:
             log_fatal("Unimplemented control register for STS/.L at PC = %08x", PC - 2);
     }
+    DoWriteback<u32, dest>(instruction.n.n, 0, value);
 }
 
 #ifndef INLINED_INCLUDES
