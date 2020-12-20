@@ -68,7 +68,7 @@ inline T MMIOBase<s, c>::Read(u32 address) {
     }
 
     if (!Implemented[(address & (s - 1)) >> 1]) {
-        log_fatal("Unimplemented IO access at %08x", address);
+        log_fatal("Unimplemented IO read at %08x", address);
     }
 
     address &= s - 1;
@@ -108,7 +108,7 @@ template<size_t s, class c>
 template<typename T>
 inline void MMIOBase<s, c>::Write(u32 address, T value) {
     if (!Implemented[(address & (s - 1)) >> 1]) {
-        log_fatal("Unimplemented IO access at %08x", address);
+        log_fatal("Unimplemented IO write %x to %08x", value, address);
     }
     log_io("IO write %x to %08x", value, address);
 

@@ -74,7 +74,7 @@ INSTRUCTION(STC) {
 template<StatusRegister S, AddressingMode dest>
 INSTRUCTION(STS) {
     // STS/STS.L instructions
-    i32 value;
+    u32 value;
     switch (S) {
         case StatusRegister::PR:
             // never immediate, don't need second arg

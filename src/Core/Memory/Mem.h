@@ -90,6 +90,7 @@ T Memory::Read(u32 address) {
                     }
                     goto unhandled;
                 case 0x059:
+                case 0x05b:
                 case 0x05d:
                     /*
                      * Reads:
@@ -166,6 +167,7 @@ void Memory::Write(u32 address, T value) {
                         return;
                     }
                     goto unhandled;
+                case 0x052:
                 case 0x059:
                     /*
                      * Writes:

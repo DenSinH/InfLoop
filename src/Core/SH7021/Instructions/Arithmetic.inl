@@ -47,7 +47,7 @@ INSTRUCTION(CMP) {
                 result = (i32)R[n] > (i32)R[m];
                 break;
             case Condition::HI:
-                result = R[n] >= R[m];
+                result = R[n] > R[m];
                 break;
             case Condition::HS:
                 result = R[n] >= R[m];

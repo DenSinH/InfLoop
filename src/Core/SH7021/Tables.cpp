@@ -51,12 +51,16 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::TSTI;
         case 0xc900:
             return &SH7021::ANDI;
+        case 0xca00:
+            return &SH7021::XORI;
         case 0xcb00:
             return &SH7021::ORI;
         case 0xcc00:
             return &SH7021::TSTB;
         case 0xcd00:
             return &SH7021::ANDB;
+        case 0xce00:
+            return &SH7021::XORB;
         case 0xcf00:
             return &SH7021::ORB;
         default:
@@ -76,14 +80,26 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::CMP<Condition::HS>;
         case 0x200c:
             return &SH7021::CMP<Condition::STR>;
+        case 0x2007:
+            return &SH7021::DIV0S;
+        case 0x3004:
+            return &SH7021::DIV1;
+        case 0x600b:
+            return &SH7021::NEG;
         case 0x3008:
             return &SH7021::SUB;
+        case 0x300a:
+            return &SH7021::SUBC;
         case 0x300c:
             return &SH7021::ADD;
+        case 0x300e:
+            return &SH7021::ADDC;
         case 0x300f:
             return &SH7021::ADDV;
         case 0x2009:
             return &SH7021::AND;
+        case 0x200a:
+            return &SH7021::XOR;
         case 0x200b:
             return &SH7021::OR;
         case 0x6003:
@@ -144,6 +160,8 @@ SH7021Instruction GetInstruction(u16 instruction) {
     }
 
     switch (instruction & 0xf0ff) {
+        case 0x0029:
+            return &SH7021::MOVT;
         case 0x0002:
             return &SH7021::STC<ControlRegister::SR, AddressingMode::DirectRegister>;
         case 0x0012:
@@ -166,7 +184,7 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::SHLLn<2>;
         case 0x4018:
             return &SH7021::SHLLn<8>;
-        case 0x4048:
+        case 0x4028:
             return &SH7021::SHLLn<16>;
         case 0x4001:
             return &SH7021::SHLR;
@@ -174,7 +192,7 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::SHLRn<2>;
         case 0x4019:
             return &SH7021::SHLRn<8>;
-        case 0x4049:
+        case 0x4029:
             return &SH7021::SHLRn<16>;
         case 0x4021:
             return &SH7021::SHAR;
@@ -182,6 +200,10 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::ROTL;
         case 0x4005:
             return &SH7021::ROTR;
+        case 0x4024:
+            return &SH7021::ROTCL;
+        case 0x4025:
+            return &SH7021::ROTCR;
         case 0x400e:
             return &SH7021::LDC<AddressingMode::DirectRegister, ControlRegister::SR>;
         case 0x401e:
@@ -231,6 +253,8 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::NOP;
         case 0x000b:
             return &SH7021::RTS;
+        case 0x0019:
+            return &SH7021::DIV0U;
         default:
             break;
     }

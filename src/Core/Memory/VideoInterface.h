@@ -12,6 +12,7 @@ public:
 
     constexpr void Init() override {
         SetImplemented(0x4);
+        SetImplemented(0x6);  // IDK what this register is
         SetReadPrecall(0x4, &VideoInterface::ReadVTR);
     }
 

@@ -9,6 +9,7 @@ What IO would be used for:
 There seem to be a lot of IO regions in the 0C0X'XXXX part of the address space:
  - 0C04'XXXX: VRAM
  - 0C05'1XXX: PRAM
+ - 0C05'2XXX: ???
  - 0C05'8XXX: ???
  - 0C05'9XXX: Seems to hold 4 sets of identical IO registers, spaced 8 bytes apart
               Animeland has a function to set these IO registers, (FUN_0e003104 calls it for all regions, based on some status)

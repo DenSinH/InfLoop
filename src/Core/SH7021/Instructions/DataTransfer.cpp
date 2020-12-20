@@ -7,3 +7,7 @@ CPU_INSTRUCTION(MOVA) {
 CPU_INSTRUCTION(MOVIimm) {
     R[instruction.ni.n] = SignExtend<u8>(instruction.ni.i);
 }
+
+CPU_INSTRUCTION(MOVT) {
+    R[instruction.n.n] = SR.T ? 1 : 0;
+}
