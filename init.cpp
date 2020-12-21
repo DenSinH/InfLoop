@@ -214,7 +214,7 @@ void Initializer::ParseInput(struct s_controller* controller) {
 }
 
 void Initializer::frontend_video_init() {
-    // loopy->PPU.VideoInit();
+    loopy->PPU.VideoInit();
 }
 
 s_framebuffer Initializer::frontend_render(size_t t) {
@@ -283,6 +283,17 @@ Loopy* Initializer::init() {
 
     add_register_data("c058004", &loopy->Mem.IOVideoInterface.VTR, 2, vreg_tab);
 
+    add_image_window(
+        "Tiles",
+        [](){ return loopy->PPU.DrawTileData(); },
+        true,
+        256,
+        256,
+        // scale * 2
+        512,
+        512,
+        [](bool left) { loopy->PPU.OnTileDataClick(left); }
+    );
 
     add_command("RESET", "Resets the system. Add 'pause/freeze/break' to freeze on reload.", reset_system);
     add_command("PAUSE", "Pauses the system.", pause_system);

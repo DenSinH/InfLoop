@@ -9,6 +9,7 @@
 #include "widgets/disassembly_viewer.h"
 #include "widgets/memory_viewer.h"
 #include "widgets/palette_viewer.h"
+#include "widgets/image_manager.h"
 
 #ifdef NDEBUG
 #define DEFAULT_DEBUGGER_WIDGET_STATE false
@@ -22,6 +23,7 @@ static bool show_disassembly_viewer = DEFAULT_DEBUGGER_WIDGET_STATE;
 static bool show_overlay = false;
 static bool show_memory_viewer = DEFAULT_DEBUGGER_WIDGET_STATE;
 static bool show_palette_viewer = DEFAULT_DEBUGGER_WIDGET_STATE;
+static bool show_image_manager = DEFAULT_DEBUGGER_WIDGET_STATE;
 
 // Our state
 static struct s_debugger {
@@ -31,6 +33,7 @@ static struct s_debugger {
     Overlay overlay;
     MemoryViewer memory_viewer;
     PaletteViewer palette_viewer;
+    ImageManager image_manager;
 } Debugger;
 
 void add_command(const char* command, const char* description, CONSOLE_COMMAND((*callback))) {
@@ -40,7 +43,6 @@ void add_command(const char* command, const char* description, CONSOLE_COMMAND((
             .callback = callback
     });
 }
-
 
 void add_overlay_info(OVERLAY_INFO((*getter))) {
     Debugger.overlay.AddInfo(getter);
@@ -52,6 +54,18 @@ int add_register_tab(const char* name){
 
 void add_register_data(const char* name, const void* value, size_t size, int tab) {
     Debugger.register_viewer.AddRegister(name, value, size, tab);
+}
+
+void add_image_window(
+        const char* name,
+        void* (*draw)(),
+        bool enabled,
+        size_t width,
+        size_t height,
+        size_t img_width,
+        size_t img_height,
+        void (*onclick)(bool)) {
+    Debugger.image_manager.add_image_window(name, draw, enabled, width, height, img_width, img_height, onclick);
 }
 
 void debugger_init(
@@ -114,6 +128,7 @@ void debugger_render() {
                 &show_register_viewer,
                 &show_disassembly_viewer,
                 &show_memory_viewer,
+                &show_image_manager,
                 &show_overlay
         );
     }
@@ -130,4 +145,6 @@ void debugger_render() {
         Debugger.memory_viewer.Draw(&show_memory_viewer);
     if (show_palette_viewer)
         Debugger.palette_viewer.Draw(&show_palette_viewer);
+    if (show_image_manager)
+        Debugger.image_manager.Draw(&show_image_manager);
 }

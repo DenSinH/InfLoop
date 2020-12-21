@@ -25,7 +25,7 @@ set(FRONTEND_HDRS
         interface.h
         controller.h
         settings.h
-)
+        widgets/image_manager.h)
 
 add_library(Frontend ${FRONTEND_SRCS} ${FRONTEND_HDRS})
 

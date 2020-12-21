@@ -2,6 +2,7 @@
 #define GC__SYSTEM_H
 
 #include "SH7021/SH7021.h"
+#include "PPU/PPU.h"
 #include "Memory/Mem.h"
 
 #include "default.h"
@@ -52,6 +53,7 @@ private:
 
     Memory Mem = Memory(&Paused);
     SH7021 CPU = SH7021(&Mem, &timer);
+    LoopyPPU PPU = LoopyPPU(&Mem);
 };
 
 #endif //GC__SYSTEM_H

@@ -49,6 +49,16 @@ extern "C" {
     void add_overlay_info(OVERLAY_INFO((*getter)));
     int add_register_tab(const char* name);
     void add_register_data(const char* name, const void* value, size_t size, int tab);
+    void add_image_window(
+            const char* name,
+            void* (*draw)(),
+            bool enabled,
+            size_t width,
+            size_t height,
+            size_t img_width,
+            size_t img_height,
+            void (*onclick)(bool)
+    );
 
     size_t add_menu_tab(char* name);
 

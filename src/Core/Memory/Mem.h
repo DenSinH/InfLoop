@@ -28,6 +28,7 @@ public:
 
 private:
     friend class Initializer;
+    friend class LoopyPPU;
 
     bool* Paused;
 
