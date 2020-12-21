@@ -1,7 +1,11 @@
 add_library(Mem STATIC
         Mem.h
         Mem.cpp
-        MemoryHelpers.h MMIOBase.h VideoInterface.h VideoInterface.cpp)
+        MemoryHelpers.h
+        MMIOBase.h
+        VideoInterface.h
+        VideoInterface.cpp
+)
 
 # for logging / stuff I want to use in all files
 include_directories(

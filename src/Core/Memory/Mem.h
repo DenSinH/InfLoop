@@ -16,14 +16,12 @@
 class Memory {
 
 public:
-    Memory();
+    Memory(bool* paused);
 
     template<typename T, bool safe=false> T Read(u32 address);
     template<typename T> void Write(u32 address, T value);
 
     // debug stuff
-    u8 ReadByteSafe(u32 address);
-    u16 ReadWordSafe(u32 address);
     u16 ReadPalletteEntry(int index);
 
     void LoadROM(const std::string& file_name);
@@ -31,15 +29,22 @@ public:
 private:
     friend class Initializer;
 
+    bool* Paused;
+
     // a lot of these memory regions are not actually known what they do
     // most of this info is from the Mame driver (very lacking)
     //     @ https://github.com/mamedev/mame/blob/master/src/mame/drivers/casloopy.cpp
     // and from Lady Starbreeze (Marie) her WIP Casio loopy emu
     //     @ https://github.com/ladystarbreeze/lilySV100
+
     u8 RAM[0x8'0000]  = {};
+    // based on 256x224 resolution at 16 bits per pixel
+    // Animeland does a transfer of 7000h words to this region
+    u8 Bitmap[0xe000] = {};
     u8 VRAM[0x1'0000] = {};
     u8 PRAM[0x200]    = {};
     u8 ROM[0x20'0000] = {};  // 2MB ROMs
+    u8 ORAM[0x400]    = {};  // from MAME
 
     VideoInterface IOVideoInterface = VideoInterface();
 
@@ -64,6 +69,18 @@ T Memory::Read(u32 address) {
                 log_warn("BIOS read @%08x", address);
             }
             return ReadArrayBE<T>(BIOSStub, address & 3);
+        case 0x05:
+            if constexpr(std::is_same_v<T, u16>) {
+                switch (address) {
+                    case 0x05ff'ff48:
+                        return InternalIO.DMAOR;
+                    case 0x05ff'ff84 ... 0x05ff'ff8c:
+                        return InternalIO.IPR[(address - 0x05ff'ff84) >> 1];
+                    default:
+                        break;
+                }
+            }
+            goto unhandled;
         case 0x09:
             // RAM
             if (address < 0x0908'0000) {
@@ -75,6 +92,8 @@ T Memory::Read(u32 address) {
         case 0x0c:
             // mirrors, judging from Marie's emulator
             switch ((address >> 12) & 0xfff) {
+                case 0x000 ... 0x00e:
+                    return ReadArrayBE<T>(Bitmap, address & 0xffff);
                 case 0x040 ... 0x04f:
                     return ReadArrayBE<T>(VRAM, address & 0xffff);
                 case 0x051:
@@ -89,7 +108,9 @@ T Memory::Read(u32 address) {
                         return IOVideoInterface.Read<T, safe>(address);
                     }
                     goto unhandled;
+                case 0x052:
                 case 0x059:
+                case 0x05a:
                 case 0x05b:
                 case 0x05d:
                     /*
@@ -101,15 +122,20 @@ T Memory::Read(u32 address) {
                      *          0c05d012
                      * */
                 case 0x05e:
-                    log_warn("Unhandled read: %08x", address);
+                    log_mem("Unhandled read: %08x", address);
                     return 0;
                 default:
                     goto unhandled;
             }
-        case 0x0E:
+        case 0x0e:
             if (address < 0x0e1f'ffff) {
                 // ROM
                 return ReadArrayBE<T>(ROM, address & 0x1f'ffff);
+            }
+            break;
+        case 0x0f:
+            if (address < 0x0f00'0400) {
+                return ReadArrayBE<T>(ORAM, address & 0x3ff);
             }
             break;
         default:
@@ -150,6 +176,9 @@ void Memory::Write(u32 address, T value) {
         case 0x0c:
             // mirrors, judging from Marie's emulator
             switch ((address >> 12) & 0xfff) {
+                case 0x000 ... 0x00e:
+                    WriteArray<T>(Bitmap, address & 0xffff, value);
+                    return;
                 case 0x040 ... 0x04f:
                     WriteArrayBE<T>(VRAM, address & 0xffff, value);
                     return;
@@ -167,6 +196,7 @@ void Memory::Write(u32 address, T value) {
                         return;
                     }
                     goto unhandled;
+                case 0x050:
                 case 0x052:
                 case 0x059:
                     /*
@@ -193,7 +223,7 @@ void Memory::Write(u32 address, T value) {
                      *      4 to c05b000
                      * */
                 case 0x05e:
-                    log_warn("Unhandled write: %x to %08x", value, address);
+                    log_mem("Unhandled write: %x to %08x", value, address);
                     return;
                 case 0x05f:
                     // This holds 0x80 ushorts of values
@@ -203,6 +233,12 @@ void Memory::Write(u32 address, T value) {
                     goto unhandled;
             }
             break;
+        case 0x0f:
+            if (address < 0x0f00'0400) {
+                WriteArrayBE<T>(ORAM, address & 0x3ff, value);
+                return;
+            }
+            goto unhandled;
         default:
             unhandled:
             log_fatal("Unknown %dbit write %x to %x", sizeof(T) << 3, value, address);

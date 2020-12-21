@@ -50,7 +50,7 @@ private:
     i32 timer = 0;
     s_scheduler Scheduler = s_scheduler(&timer);
 
-    Memory Mem = Memory();
+    Memory Mem = Memory(&Paused);
     SH7021 CPU = SH7021(&Mem, &timer);
 };
 

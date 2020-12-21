@@ -11,9 +11,12 @@ public:
     }
 
     constexpr void Init() override {
+        SetImplemented(0x2);  // IDK what this register is (Animeland polls at 0e00f992
         SetImplemented(0x4);
         SetImplemented(0x6);  // IDK what this register is
+
         SetReadPrecall(0x4, &VideoInterface::ReadVTR);
+        SetReadPrecall(0x2, &VideoInterface::ReadOtherTimerReg);
     }
 
 protected:
@@ -25,6 +28,8 @@ private:
     // I think this because loopy is supposed to be plugged into a TV to play
     // this would mean that bit 1 being set, then cleared would mean its in VBlank I think
     u16 VTR = 0;
+    u16 OtherTimerReg = 0;
 
     READ_PRECALL(ReadVTR);
+    READ_PRECALL(ReadOtherTimerReg);
 };

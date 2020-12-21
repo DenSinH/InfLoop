@@ -99,9 +99,13 @@ private:
     static std::array<SH7021Instruction, 0x10000> instructions;
 
     INSTRUCTION(unimplemented);
+
     INSTRUCTION(MOVA);
     INSTRUCTION(MOVIimm);
     INSTRUCTION(MOVT);
+    INSTRUCTION(SWAPB);
+    INSTRUCTION(SWAPW);
+    INSTRUCTION(XTRCT);
 
     INSTRUCTION(ADD);
     INSTRUCTION(ADDI);
@@ -173,6 +177,7 @@ private:
 #undef INLINED_INCLUDES
 
     void BIOSMemcpy66d0();
+    void BIOSBitmapUncomp445c();
 
     template<typename T>
     static constexpr ALWAYS_INLINE u32 SignExtend(T value) {

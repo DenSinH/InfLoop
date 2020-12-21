@@ -155,6 +155,12 @@ SH7021Instruction GetInstruction(u16 instruction) {
         case 0x6006:
             return &SH7021::MOV<u32, AddressingMode::PostIncrementIndirectRegister, AddressingMode::DirectRegister>;
             // todo: other addressing modes
+        case 0x6008:
+            return &SH7021::SWAPB;
+        case 0x6009:
+            return &SH7021::SWAPW;
+        case 0x200d:
+            return &SH7021::XTRCT;
         default:
             break;
     }

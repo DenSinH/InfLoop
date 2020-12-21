@@ -2,11 +2,13 @@
 
 #include <fstream>
 
-Memory::Memory() {
+Memory::Memory(bool* paused) {
     IOVideoInterface.Init();
 
     memset(PRAM, 0, sizeof(PRAM));
     memset(ROM, 0, sizeof(ROM));
+
+    this->Paused = paused;
 }
 
 size_t LoadFileTo(char* buffer, const std::string& file_name, size_t max_length) {
