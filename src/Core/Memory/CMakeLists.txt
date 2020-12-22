@@ -5,7 +5,7 @@ add_library(Mem STATIC
         MMIOBase.h
         VideoInterface.h
         VideoInterface.cpp
-)
+        InternalIO.h)
 
 # for logging / stuff I want to use in all files
 include_directories(

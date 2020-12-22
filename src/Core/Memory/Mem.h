@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VideoInterface.h"
+#include "InternalIO.h"
 
 #include "default.h"
 #include "MemoryHelpers.h"
@@ -66,10 +67,7 @@ private:
         0x00, 0x0B, 0x00, 0x09
     };
 
-    struct {
-        u16 DMAOR;   // 0x05ff'ff48
-        u16 IPR[5];  // A - E, 0x05ff'ff84, 86, 88, 8a, 8c
-    } InternalIO;
+    InternalIO IO = InternalIO();
 };
 
 template<typename T, bool safe>
@@ -88,15 +86,8 @@ T Memory::Read(u32 address) {
             }
             goto unhandled;
         case 0x05:
-            if constexpr(std::is_same_v<T, u16>) {
-                switch (address) {
-                    case 0x05ff'ff48:
-                        return InternalIO.DMAOR;
-                    case 0x05ff'ff84 ... 0x05ff'ff8c:
-                        return InternalIO.IPR[(address - 0x05ff'ff84) >> 1];
-                    default:
-                        break;
-                }
+            if (address >= 0x05ff'ff00) {
+                return IO.Read<T, safe>(address & 0xff);
             }
             goto unhandled;
         case 0x09:
@@ -182,17 +173,9 @@ void Memory::Write(u32 address, T value) {
             WriteArrayBE<T>(RAM, address & 0x7'ffff, value);
             return;
         case 0x05:
-            if constexpr(std::is_same_v<T, u16>) {
-                switch (address) {
-                    case 0x05ff'ff48:
-                        InternalIO.DMAOR = value;
-                        return;
-                    case 0x05ff'ff84 ... 0x05ff'ff8c:
-                        InternalIO.IPR[(address - 0x05ff'ff84) >> 1] = value;
-                        return;
-                    default:
-                        break;
-                }
+            if (address >= 0x05ff'ff00) {
+                IO.Write<T>(address & 0xff, value);
+                return;
             }
             goto unhandled;
         case 0x04:

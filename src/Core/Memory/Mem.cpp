@@ -4,6 +4,7 @@
 
 Memory::Memory(bool* paused) {
     IOVideoInterface.Init();
+    IO.Init();
 
     memset(PRAM, 0, sizeof(PRAM));
     memset(ROM, 0, sizeof(ROM));

@@ -108,7 +108,7 @@ template<size_t s, class c>
 template<typename T>
 inline void MMIOBase<s, c>::Write(u32 address, T value) {
     if (!Implemented[(address & (s - 1)) >> 1]) {
-        log_fatal("Unimplemented IO write %x to %08x", value, address);
+        log_fatal("Unimplemented %dbit IO write %x to %08x", sizeof(T) << 3, value, address);
     }
     log_io("IO write %x to %08x", value, address);
 
@@ -116,12 +116,12 @@ inline void MMIOBase<s, c>::Write(u32 address, T value) {
     if constexpr (std::is_same_v<T, u32>) {
         // 32 bit writes are a little different
         // Remember Big Endianness!
-        WriteArrayBE<u16>(Registers, address, value);
+        WriteArrayBE<u16>(Registers, address + 2, value);
         if (WriteCallback[address >> 1]) {
             (reinterpret_cast<c*>(this)->*WriteCallback[address >> 1])(value >> 16);
         }
 
-        WriteArrayBE<u16>(Registers, address + 2, value >> 16);
+        WriteArrayBE<u16>(Registers, address, value >> 16);
         if (WriteCallback[1 + (address >> 1)]) {
             (reinterpret_cast<c*>(this)->*WriteCallback[1 + (address >> 1)])(value);
         }
