@@ -20,7 +20,7 @@ public:
     void OnTileDataClick(bool);
 
 private:
-    static const u32 TileDataStart = 0x2400;
+    static const u32 TileDataStart = 0x1000;
 
     u32 TileDataPaletteBank = 0xc; // kind of random, but this is a good choice for animeland
     GLuint TileDataTexture;

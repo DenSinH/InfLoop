@@ -70,7 +70,7 @@ enum class Condition {
 class SH7021 {
 public:
 
-    SH7021(Memory* Mem, i32* timer);
+    SH7021(Memory* Mem, i32* timer, bool* paused);
 
     void Step();
     void BIOSCall();
@@ -80,6 +80,8 @@ private:
     friend class SH7021INL;
     friend class Loopy;
     friend SH7021Instruction GetInstruction(u16 instruction);
+
+    bool* Paused;
 
     // to prevent branches in branch delay slots
     bool InBranchDelay = false;
@@ -176,8 +178,9 @@ private:
 #include "Instructions/Shift.inl"
 #undef INLINED_INCLUDES
 
-    void BIOSMemcpy66d0();
     void BIOSBitmapUncomp445c();
+    void BIOSKanaUnpack5f4c();
+    void BIOSMemcpy66d0();
 
     template<typename T>
     static constexpr ALWAYS_INLINE u32 SignExtend(T value) {

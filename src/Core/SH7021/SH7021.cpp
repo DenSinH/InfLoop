@@ -18,9 +18,10 @@ std::array<SH7021Instruction, 0x10000> SH7021::instructions = [] {
     return table;
 }();
 
-SH7021::SH7021(Memory* Mem, i32* timer) {
+SH7021::SH7021(Memory* Mem, i32* timer, bool* paused) {
     this->Mem = Mem;
     this->timer = timer;
+    this->Paused = paused;
 }
 
 CPU_INSTRUCTION(unimplemented) {

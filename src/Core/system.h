@@ -52,7 +52,7 @@ private:
     s_scheduler Scheduler = s_scheduler(&timer);
 
     Memory Mem = Memory(&Paused);
-    SH7021 CPU = SH7021(&Mem, &timer);
+    SH7021 CPU = SH7021(&Mem, &timer, &Paused);
     LoopyPPU PPU = LoopyPPU(&Mem);
 };
 

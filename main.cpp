@@ -19,7 +19,7 @@ int main() {
     loopy = Initializer::init();
 
 #ifdef DO_BREAKPOINTS
-    loopy->Paused = true;
+    loopy->Paused = false;
 #endif
 
     atexit(exception_handler);

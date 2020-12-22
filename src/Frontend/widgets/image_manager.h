@@ -92,10 +92,10 @@ public:
                 if (ImGui::IsItemHovered())
                 {
                     if (window.onclick && ImGui::IsMouseClicked(0)) {
-                        window.onclick(true);
+                        window.onclick(false);
                     }
                     else if (window.onclick && ImGui::IsMouseClicked(1)) {
-                        window.onclick(false);
+                        window.onclick(true);
                     }
 
                     ImGui::BeginTooltip();
