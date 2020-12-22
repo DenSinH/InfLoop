@@ -1,5 +1,7 @@
 #include "PPU.h"
 
+#include "DistinctColors.h"
+
 #include "../Memory/MemoryHelpers.h"
 #include "../Memory/Mem.h"
 
@@ -10,6 +12,15 @@ void LoopyPPU::VideoInit() {
                  0, GL_RGB, GL_UNSIGNED_SHORT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    glGenTextures(2, TileMapTexture);
+    for (int i = 0; i < 2; i++) {
+        glBindTexture(GL_TEXTURE_2D, TileMapTexture[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB5, TileMapRaw[0][0].size(), TileMapRaw[0].size(),
+                     0, GL_RGB, GL_UNSIGNED_SHORT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
 
     log_debug("OpenGL error after video initialization: %x", glGetError());
 }
@@ -62,4 +73,31 @@ void LoopyPPU::DrawTile(u16 *dest, size_t index, size_t target_width, u32 palett
             dest[y * target_width + x] = color;
         }
     }
+}
+
+void* LoopyPPU::DrawTileMap(u32 i) {
+    for (int y = 0; y < 28; y++) {
+        for (int x = 0; x < 32; x++) {
+            u16 entry = ReadArrayBE<u16>(Mem->VRAM, i * 0x700 + 2 * ( y * 32 + x));
+            TileMapRaw[i][y][x] = DistinctColors[(entry & 0xff) + TileMapHeatmapOffset];
+        }
+    }
+
+    glBindTexture(GL_TEXTURE_2D, TileMapTexture[i]);
+    glTexSubImage2D(GL_TEXTURE_2D, 0,
+                    0, 0,
+                    TileMapRaw[i][0].size(), TileMapRaw[i].size(),
+                    GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, TileMapRaw[i].data()
+    );
+    return (void*)(intptr_t)TileMapTexture[i];
+}
+
+void LoopyPPU::OnTileMapClick(bool left) {
+    if (left) {
+        TileMapHeatmapOffset++;
+    }
+    else {
+        TileMapHeatmapOffset--;
+    }
+    TileMapHeatmapOffset &= 0xff;
 }

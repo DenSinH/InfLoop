@@ -51,7 +51,12 @@ struct {
  - `0x0e11'6d98` - `0x0e11'716c`: Array of pointers to structs (about 104h in size) (palettes?)
  - `0x0e11'716c` - `0x0e12'5da8`: Array of structs (about 104h in size) (palettes?)
  
- 
- 
- 
+## VBR Table
+
+All entries are a BIOS function (not sure if it's really a useful one, it might just not expect interrupts).
+Except the entry at offset 120h, which is the DMAC0/1 priority 3 interrupt.
+The handler pushes all registers onto the stack, and calls 6238h as
+`(sub_6238h)(0x0900'1008, 0xff)`
+then it pops every single register again and returns.
+    
  

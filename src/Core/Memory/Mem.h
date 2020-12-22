@@ -46,6 +46,18 @@ private:
     u8 PRAM[0x200]    = {};
     u8 ROM[0x20'0000] = {};  // 2MB ROMs
     u8 ORAM[0x400]    = {};  // from MAME
+    /* In the ROM headers of Animeland and Dream chase, the addresses 0x02000000 and 0x02001fff are set
+     * My suspicion is this for the ROM header:
+     * uint VBR
+     * uint ROM_END
+     * uint ID
+     * uint FFFF'FFFF
+     * uint SRAM_START
+     * uint SRAM_END
+     * filled with FFF until 0x0e000480
+     * VBR table
+     * */
+    u8 SRAM[0x2000]   = {};
 
     VideoInterface IOVideoInterface = VideoInterface();
 
@@ -70,6 +82,11 @@ T Memory::Read(u32 address) {
                 log_warn("BIOS read @%08x", address);
             }
             return ReadArrayBE<T>(BIOSStub, address & 3);
+        case 0x02:
+            if (address < 0x0200'2000) {
+                return ReadArrayBE<T>(SRAM, address & 0x1fff);
+            }
+            goto unhandled;
         case 0x05:
             if constexpr(std::is_same_v<T, u16>) {
                 switch (address) {
@@ -155,6 +172,11 @@ T Memory::Read(u32 address) {
 template<typename T>
 void Memory::Write(u32 address, T value) {
     switch (address >> 24) {
+        case 0x02:
+            if (address < 0x0200'2000) {
+                return WriteArrayBE<T>(SRAM, address & 0x1fff, value);
+            }
+            goto unhandled;
         case 0x09:
             // RAM
             WriteArrayBE<T>(RAM, address & 0x7'ffff, value);

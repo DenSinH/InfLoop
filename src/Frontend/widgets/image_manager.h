@@ -58,16 +58,13 @@ public:
         ImGui::SetNextWindowSizeConstraints(ImVec2(-1, -1),    ImVec2(-1, -1));
         ImGui::SetNextWindowSize(ImVec2(200, 310), ImGuiCond_Once);
 
-        if (!ImGui::Begin("Image Manager", p_open))
-        {
-            ImGui::End();
-            return;
+        if (ImGui::Begin("Image Manager", p_open)) {
+            ImGui::BeginChild("ChildL", ImVec2(ImGui::GetWindowContentRegionWidth(), 260), false);
+            for (auto& window : windows) {
+                ImGui::Selectable(window.name, &window.enabled);
+            }
+            ImGui::EndChild();
         }
-        ImGui::BeginChild("ChildL", ImVec2(ImGui::GetWindowContentRegionWidth(), 260), false);
-        for (auto& window : windows) {
-            ImGui::Selectable(window.name, &window.enabled);
-        }
-        ImGui::EndChild();
 
         ImGui::End();
 
@@ -80,7 +77,7 @@ public:
 
                 ImGui::SetNextWindowSizeConstraints(ImVec2(window.width, window.height), ImVec2(FLT_MAX, FLT_MAX));
                 ImGui::SetNextWindowSize(ImVec2(window.width, window.height), ImGuiCond_Once);
-                ImGui::Begin(window.name, p_open, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::Begin(window.name, nullptr, ImGuiWindowFlags_HorizontalScrollbar);
 
                 ImGui::Image(texture, ImVec2(window.img_width, window.img_height));
 

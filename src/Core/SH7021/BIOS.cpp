@@ -1,10 +1,28 @@
 #include "SH7021.h"
 
 void SH7021::BIOSMemcpy66d0() {
-    /*
+    /* r4: ptr to struct:
+     * This struct seems to be padded to align by 4 bytes as follows:
+     * struct {
+     *  u16 flags;
+     *  u16 _padding;
+     *  u32 src_addr;
+     *  u32 dest_addr;
+     *  u16 len;  // units, not bytes
+     *  u16 _padding;
+     * }
+     * This would then correspond with the DMA registers basically, except for the "flags" field
+     * r5: DMA channel to use
      *
+     * It seems like no bits other than destination/source control would be used
+     * other bits dont seem useful for a simple memcpy anyway.
+     *
+     *  - 1 is used to transfer PRAM to some pointer that is then cleared again
+     *  - 1 is used to transfer from some IO register at 0x0c05'f000 into an array in RAM
+     * and the main reason:
+     *  - 4 is used to transfer a bitmap that was decompressed into RAM over to bitmap RAM at 0x0c00'0000
+     *    if bitmap RAM is accessed directly, why wouldn't it just be decompressed directly in there?
      * */
-    *Paused = true;
     u32 data_ptr = R[4];  // first arg
     u32 flags = Mem->Read<u16>(data_ptr);
     u32 src  = Mem->Read<u32>(data_ptr + 4);
@@ -12,7 +30,7 @@ void SH7021::BIOSMemcpy66d0() {
     u32 len   = Mem->Read<u16>(data_ptr + 12);
     log_debug("BIOS memcpy: %x, %x -> %x, %x", flags, src, dest, len);
 
-    if (flags == 1) {
+    if (flags == 1 || flags == 4) {
         /* r4: ptr to data struct
          * r5: DMA channel used?  todo: compare struct with DMA registers
          * Judging from FUN_0e00eda0 in Animeland (specifically:
@@ -39,11 +57,11 @@ void SH7021::BIOSMemcpy66d0() {
         for (u32 i = 0; i < len; i++) {
             Mem->Write<u16>(dest, Mem->Read<u16>(src));
             dest += 2;
-            src += 2;
+            src  += 2;
         }
     }
     else {
-        log_warn("Unknown BIOS memcpy flag setting: %x", flags);
+        log_fatal("Unknown BIOS memcpy flag setting: %x", flags);
     }
 }
 

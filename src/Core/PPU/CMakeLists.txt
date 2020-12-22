@@ -1,7 +1,7 @@
 add_library(PPU STATIC
         PPU.cpp
         PPU.h
-)
+        DistinctColors.h)
 
 # for logging / stuff I want to use in all files
 include_directories(

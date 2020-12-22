@@ -295,6 +295,21 @@ Loopy* Initializer::init() {
         [](bool left) { loopy->PPU.OnTileDataClick(left); }
     );
 
+    add_image_window("Tilemap 0",
+        [](){ return loopy->PPU.DrawTileMap(0); },true,
+        256,224,
+        256,224,
+        [](bool left) { loopy->PPU.OnTileMapClick(left); }
+    );
+
+    add_image_window("Tilemap 1",
+        [](){ return loopy->PPU.DrawTileMap(1); }, true,
+        256,224,
+                     256,224,
+        [](bool left) { loopy->PPU.OnTileMapClick(left); }
+    );
+
+
     add_command("RESET", "Resets the system. Add 'pause/freeze/break' to freeze on reload.", reset_system);
     add_command("PAUSE", "Pauses the system.", pause_system);
     add_command("CONTINUE", "Unpauses the system.", unpause_system);
