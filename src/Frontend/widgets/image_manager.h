@@ -102,13 +102,13 @@ public:
                     region_y = window.img_height + region_y;
                     float zoom = 4.0f;
                     if (region_x < 0.0f) { region_x = 0.0f; }
-                    else if (region_x > window.width - region_sz) { region_x = window.width - region_sz; }
+                    else if (region_x > window.img_width - region_sz) { region_x = window.img_width - region_sz; }
                     if (region_y < 0.0f) { region_y = 0.0f; }
-                    else if (region_y > window.height - region_sz) { region_y = window.height - region_sz; }
+                    else if (region_y > window.img_height - region_sz) { region_y = window.img_height - region_sz; }
                     ImGui::Text("Min: (%.0f, %.0f)", region_x, region_y);
                     ImGui::Text("Max: (%.0f, %.0f)", region_x + region_sz, region_y + region_sz);
-                    ImVec2 uv0 = ImVec2((region_x) / window.width, (region_y) / window.height);
-                    ImVec2 uv1 = ImVec2((region_x + region_sz) / window.width, (region_y + region_sz) / window.height);
+                    ImVec2 uv0 = ImVec2((region_x) / window.img_width, (region_y) / window.img_height);
+                    ImVec2 uv1 = ImVec2((region_x + region_sz) / window.img_width, (region_y + region_sz) / window.img_height);
                     ImGui::Image(texture, ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1, tint_col, border_col);
                     ImGui::EndTooltip();
                 }

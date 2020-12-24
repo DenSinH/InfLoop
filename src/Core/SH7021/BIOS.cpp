@@ -102,6 +102,7 @@ void SH7021::BIOS2BPPTileUnpack6028() {
      * Also look at 0e0099b0:
      * called with r6 = 0xda
      * So r6 cannot be an offset, it has to be some sort of length
+     * a length of 0xda also corresponds with a full set of character tiles it seems
      * */
     u32 src    = R[4];
     u32 dest   = R[5];
@@ -111,6 +112,7 @@ void SH7021::BIOS2BPPTileUnpack6028() {
     for (int i = 0; i < count; i++) {
         UnpackTile2BPP(src + 0x10 * i, dest + 0x20 * i, 0);
     }
+    *Paused = true;
 }
 
 void SH7021::BIOS4x4TileUnpack2BPP60a4() {
@@ -203,9 +205,24 @@ void SH7021::BIOSCall() {
      *  - 6a48:
      *  - 6ac0:
      *  - 6b50:
+     *
+     *  437c seems to be the same sort of compression as used by 445c, except 4 bits instead of 8 bits
+     *  Arguments are
+     *  r4: pointer to (packed) struct {
+     *      // I guess the following 2 are just width * height
+     *      u16 width;           // in nibbles
+     *      u16 number_of_tiles; // in tiles
+     *      byte* table;         // contains only nibbles
+     *      byte* data_stream;
+     *  }
+     *  r5: destination pointer
+     *  I don't think it has any other arguments
      * */
 
     switch(PC) {
+        case 0x437c:
+            *Paused = true;
+            goto bios_call_default;
         case 0x445c:
             BIOSBitmapUncomp445c();
             break;
@@ -245,6 +262,7 @@ void SH7021::BIOSCall() {
             BIOSMemcpy66d0();
             break;
         default:
+        bios_call_default:
             log_debug("Unknown BIOS call");
             // *Paused = true;
             break;

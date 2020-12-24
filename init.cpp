@@ -291,7 +291,7 @@ Loopy* Initializer::init() {
         256,
         // scale * 2
         512,
-        512,
+        480 * 2,
         [](bool left) { loopy->PPU.OnTileDataClick(left); }
     );
 

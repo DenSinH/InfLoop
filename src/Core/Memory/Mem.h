@@ -42,8 +42,9 @@ private:
     u8 RAM[0x8'0000]  = {};
     // based on 256x224 resolution at 16 bits per pixel
     // Animeland does a transfer of 7000h words to this region
-    u8 Bitmap[0xe000] = {};
-    u8 VRAM[0x1'0000] = {};
+    u8 Bitmap[0xe000]     = {};
+    u8 TileMap[0x1000]    = {};
+    u8 TileData[0xf000] = {};
     u8 PRAM[0x200]    = {};
     u8 ROM[0x20'0000] = {};  // 2MB ROMs
     u8 ORAM[0x400]    = {};  // from MAME
@@ -106,8 +107,10 @@ T Memory::Read(u32 address) {
             switch ((address >> 12) & 0xfff) {
                 case 0x000 ... 0x00e:
                     return ReadArrayBE<T>(Bitmap, address & 0xffff);
-                case 0x040 ... 0x04f:
-                    return ReadArrayBE<T>(VRAM, address & 0xffff);
+                case 0x040:
+                    return ReadArrayBE<T>(TileMap, address & 0x0fff);
+                case 0x041 ... 0x04f:
+                    return ReadArrayBE<T>(TileData, (address & 0xffff) - 0x1000);
                 case 0x051:
                     if ((address & 0xfff) < 0x200) {
                         return ReadArrayBE<T>(PRAM, address & 0x1ff);
@@ -197,8 +200,11 @@ void Memory::Write(u32 address, T value) {
                 case 0x000 ... 0x00e:
                     WriteArray<T>(Bitmap, address & 0xffff, value);
                     return;
-                case 0x040 ... 0x04f:
-                    WriteArrayBE<T>(VRAM, address & 0xffff, value);
+                case 0x040:
+                    WriteArrayBE<T>(TileMap, address & 0x0fff, value);
+                    return;
+                case 0x041 ... 0x04f:
+                    WriteArrayBE<T>(TileData, (address & 0xffff) - 0x1000, value);
                     return;
                 case 0x051:
                     if ((address & 0xfff) < 0x200) {
@@ -250,7 +256,6 @@ void Memory::Write(u32 address, T value) {
                 default:
                     goto unhandled;
             }
-            break;
         case 0x0f:
             if (address < 0x0f00'0400) {
                 WriteArrayBE<T>(ORAM, address & 0x3ff, value);

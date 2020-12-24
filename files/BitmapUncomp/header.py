@@ -10,7 +10,7 @@ image = data[0x4e:]
 
 """
 0x4c # header length
-0x2  # might signify that th huffman tree ends in trees of size 2???
+0x2  # LZ offset? might signify that the huffman tree ends in trees of size 2???
 
        https://users.dcc.uchile.cl/~gnavarro/ps/dcc13.2.pdf
 

@@ -22,11 +22,9 @@ public:
     void OnTileMapClick(bool);
 
 private:
-    static const u32 TileDataStart = 0x1000;
-
     u32 TileDataPaletteBank = 0xc; // kind of random, but this is a good choice for animeland
     GLuint TileDataTexture;
-    std::array<std::array<u16, 256>, 256> TileDataRaw = {};
+    std::array<std::array<u16, 256>, 480> TileDataRaw = {};
 
     u32 TileMapHeatmapOffset = 0;
     GLuint TileMapTexture[2];

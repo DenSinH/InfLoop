@@ -37,7 +37,7 @@ void LoopyPPU::OnTileDataClick(bool left) {
 
 void* LoopyPPU::DrawTileData() {
     size_t index = 0;
-    for (size_t y = 0; y < 256; y += 8) {
+    for (size_t y = 0; y < 480; y += 8) {
         for (size_t x = 0; x < 256; x += 8) {
             DrawTile(&TileDataRaw[y][x], index, TileDataRaw[0].size(), TileDataPaletteBank);
             index++;
@@ -54,13 +54,12 @@ void* LoopyPPU::DrawTileData() {
 }
 
 void LoopyPPU::DrawTile(u16 *dest, size_t index, size_t target_width, u32 palette_bank) {
-    index &= 0x3ff;
     for (size_t y = 0; y < 8; y++) {
         for (size_t x = 0; x < 8; x++) {
             // 4bpp tiles
-            u32 pixel_address = TileDataStart + index * 0x20 + y * 4 + (x >> 1);
-            pixel_address &= (sizeof(Mem->VRAM) - 1);
-            u8 tile_data = Mem->VRAM[pixel_address];
+            u32 pixel_address = index * 0x20 + y * 4 + (x >> 1);
+            pixel_address %= sizeof(Mem->TileData);
+            u8 tile_data = Mem->TileData[pixel_address];
 
             if (x & 1) {
                 tile_data &= 0xf;
@@ -78,7 +77,7 @@ void LoopyPPU::DrawTile(u16 *dest, size_t index, size_t target_width, u32 palett
 void* LoopyPPU::DrawTileMap(u32 i) {
     for (int y = 0; y < 28; y++) {
         for (int x = 0; x < 32; x++) {
-            u16 entry = ReadArrayBE<u16>(Mem->VRAM, i * 0x700 + 2 * ( y * 32 + x));
+            u16 entry = ReadArrayBE<u16>(Mem->TileMap, i * 0x700 + 2 * ( y * 32 + x));
             TileMapRaw[i][y][x] = DistinctColors[(entry & 0xff) + TileMapHeatmapOffset];
         }
     }

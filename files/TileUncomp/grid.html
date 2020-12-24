@@ -1,0 +1,56 @@
+<html>
+
+<head>
+	
+<style>
+*,
+*::before,
+::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.grid img {
+  display: block;
+}
+
+.grid {
+  display: inline-block;
+  position: relative;
+  margin: 10px;
+  vertical-align: top;
+}
+
+.grid::before,
+.grid::after {
+  content: '';
+  position: absolute;
+  top: -46.2%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(to right, #fff 2px, transparent 2px);
+  background-size: 2.77%;
+}
+
+.grid::before {
+  background-color: rgba(255, 0, 0, 0.0);
+  box-shadow: inset 0px 0px 0 2px #000;
+}
+
+.grid::after {
+  transform: rotate(90deg);
+}
+</style>
+</head>
+
+<body>
+<div class="grid">
+  <img src="CasioLogo.png"/>
+</div>
+
+
+</body>
+
+</html>
