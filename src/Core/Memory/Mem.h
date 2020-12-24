@@ -68,6 +68,9 @@ private:
     };
 
     InternalIO IO = InternalIO();
+
+    void DoDMA(int i, u16 DMACHCR);
+    void CheckDMA();
 };
 
 template<typename T, bool safe>
@@ -175,6 +178,15 @@ void Memory::Write(u32 address, T value) {
         case 0x05:
             if (address >= 0x05ff'ff00) {
                 IO.Write<T>(address & 0xff, value);
+                switch (address & ~1) {
+                    case 0x05ff'ff4e:  // DMA0CHCR
+                    case 0x05ff'ff5e:  // DMA1CHCR
+                    case 0x05ff'ff6e:  // DMA2CHCR
+                    case 0x05ff'ff7e:  // DMA3CHCR
+                    case 0x05ff'ff48:  // DMA3CHCR
+                        CheckDMA();
+                        break;
+                }
                 return;
             }
             goto unhandled;

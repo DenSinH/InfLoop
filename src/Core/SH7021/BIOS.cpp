@@ -22,15 +22,17 @@ void SH7021::BIOSMemcpy66d0() {
      * and the main reason:
      *  - 4 is used to transfer a bitmap that was decompressed into RAM over to bitmap RAM at 0x0c00'0000
      *    if bitmap RAM is accessed directly, why wouldn't it just be decompressed directly in there?
+     *
+     *  - 5 is used to transfer 2 words from VRAM to cfff3000 (mirror of IO?)
      * */
     u32 data_ptr = R[4];  // first arg
-    u32 flags = Mem->Read<u16>(data_ptr);
-    u32 src  = Mem->Read<u32>(data_ptr + 4);
-    u32 dest   = Mem->Read<u32>(data_ptr + 8);
-    u32 len   = Mem->Read<u16>(data_ptr + 12);
+    u32 flags    = Mem->Read<u16>(data_ptr);
+    u32 src      = Mem->Read<u32>(data_ptr + 4);
+    u32 dest     = Mem->Read<u32>(data_ptr + 8);
+    u32 len      = Mem->Read<u16>(data_ptr + 12);
     log_debug("BIOS memcpy: %x, %x -> %x, %x", flags, src, dest, len);
 
-    if (flags == 1 || flags == 4) {
+    if (flags == 1 || flags == 4 || flags == 5) {
         /* r4: ptr to data struct
          * r5: DMA channel used?  todo: compare struct with DMA registers
          * Judging from FUN_0e00eda0 in Animeland (specifically:
@@ -65,6 +67,83 @@ void SH7021::BIOSMemcpy66d0() {
     }
 }
 
+void SH7021::UnpackTile2BPP(u32 src, u32 dest, u32 offset) {
+    for (int p = 0; p < 8 * 8; p += 4) {
+        // 4 pixels per loop
+        u8 PixelGroup = Mem->Read<u8>(src);  // 4 pixels at 2BPP
+        src++;
+        u16 result = 0;
+        for (int sp = 0; sp < 4; sp++) {
+            // subpixel
+            result >>= 4;
+            result |= ((PixelGroup & 3) + offset) << 12;
+            PixelGroup >>= 2;
+        }
+        Mem->Write<u16>(dest, result);
+        dest += 2;
+    }
+}
+
+void SH7021::BIOS2BPPTileUnpack6028() {
+    /*
+     * I think this function is similar to BIOSKanaUnpack5f4c, except now it's for a single tile
+     *
+     * r4: pointer to tile data
+     * r5: destination pointer
+     * r6: offset
+     * r7: some pointer? maybe some usable buffer for the function to use while unpacking
+     *
+     * See Animeland function at 0e008002
+     * Source is an array of 2BPP tile data
+     * dest is some pointer incremented by 0x20 every loop
+     * third argument is 1 here
+     * fourth argument might be some pointer but I don't know
+     *
+     * Also look at 0e0099b0:
+     * called with r6 = 0xda
+     * So r6 cannot be an offset, it has to be some sort of length
+     * */
+    u32 src    = R[4];
+    u32 dest   = R[5];
+    u32 count  = R[6];
+    log_debug("BIOS tile unpack: %d x %x -> %x", count, src, dest);
+
+    for (int i = 0; i < count; i++) {
+        UnpackTile2BPP(src + 0x10 * i, dest + 0x20 * i, 0);
+    }
+}
+
+void SH7021::BIOS4x4TileUnpack2BPP60a4() {
+    /*
+     * I think this function is similar to BIOSKanaUnpack5f4c, except now it's for a 4x4 set of 2BPP tiles
+     *
+     * r4: pointer to tile data
+     * r5: destination pointer
+     * r6: offset
+     * r7: some pointer? maybe some usable buffer for the function to use while unpacking
+     *
+     * See Animeland function at 0e003a94
+     * Source is a TileData struct -> data field:
+     * {
+     *      u32 flag;
+     *      u8 data[256]
+     * }
+     * dest is some pointer incremented by 0x200 every loop
+     * third argument is a default offset (?)
+     * fourth argument might be some pointer but I doubt it
+     * */
+    u32 src    = R[4];
+    u32 dest   = R[5];
+    u32 offset = R[6];
+    log_debug("BIOS 4x4 tile unpack: %x -> %x, +%x", src, dest, offset);
+
+    for (u32 i = 0; i < 16; i++) {
+        UnpackTile2BPP(src, dest, offset);
+        src  += 0x10;
+        dest += 0x20;
+    }
+}
+
 void SH7021::BIOSKanaUnpack5f4c() {
     /* I am unsure, but this routine probably always unpacks 2 tiles
      * Considering the context, this routine was called 3 times in a row, with destination addresses incrementing
@@ -77,26 +156,14 @@ void SH7021::BIOSKanaUnpack5f4c() {
      * r7: pointer to some struct set up by 6644?
      *     Does not seem to be used later, I don't know what this is for
      * */
-    u32 tile_data_ptr = R[4];
-    u32 dest_ptr = R[5];
+    u32 src    = R[4];
+    u32 dest   = R[5];
     u32 offset = R[6];
 
     for (u32 i = 0; i < 2; i++) {
-        for (int p = 0; p < 8 * 8; p += 4) {
-            // 4 pixels per loop
-
-            u8 PixelGroup = Mem->Read<u8>(tile_data_ptr);  // 4 pixels at 2BPP
-            tile_data_ptr++;
-            u16 result = 0;
-            for (int sp = 0; sp < 4; sp++) {
-                // subpixel
-                result >>= 4;
-                result |= ((PixelGroup & 3) + offset) << 12;
-                PixelGroup >>= 2;
-            }
-            Mem->Write<u16>(dest_ptr, result);
-            dest_ptr += 2;
-        }
+        UnpackTile2BPP(src, dest, offset);
+        src  += 0x10;
+        dest += 0x20;
     }
 }
 
@@ -126,6 +193,7 @@ void SH7021::BIOSBitmapUncomp445c() {
 void SH7021::BIOSCall() {
     log_debug("BIOS call: %08x [PR -> PC](%08x -> %08x)", PC, PR, PC);
     log_debug("Arguments: r4-r7: [%08x, %08x, %08x, %08x]", R[4], R[5], R[6], R[7]);
+    log_debug("Stack: [%08x, %08x, ...]", Mem->Read<u32, true>(R[15]), Mem->Read<u32, true>(R[15] + 4));
     /*
      * Known unknown calls:
      *  - 668:  directly on boot (boot screen of some sort?)
@@ -142,11 +210,36 @@ void SH7021::BIOSCall() {
             BIOSBitmapUncomp445c();
             break;
         case 0x5f4c:
-            // Animeland calls 6644 before this
-            // it seems like 6644 is void (*)(int, int, void*)
-            // Animeland calls it as (3, 2, u8[36]) // last value might be a struct of some sort
+            /* Animeland calls 6644 before this
+             * it seems like 6644 is void (*)(int, int, void*)
+             * Animeland calls it as (3, 2, u8[36]) // last value might be a struct of some sort
+             * I suspect it might be setting up a DMA channel or something?
+             * */
             BIOSKanaUnpack5f4c();
             break;
+        case 0x60a4:
+            /*
+             * See Animeland function at 0e003a94
+             * BIOS 60d4 is also called. I suspect this BIOS call is to set values in OAM
+             * void (*60d4)(byte/nibble flags_0 (8), byte/nibble flags_1 (9), byte/nibble flags_2 (10), byte index (i + 1), dest*)
+             * dest* here is a pointer to a copy of ORAM, which is later copied back to ORAM
+             * */
+            BIOS4x4TileUnpack2BPP60a4();
+            break;
+        case 0x6028:
+            /* Animeland function 0e008002:
+             *  6028 called with:
+             *      - pointer to 2BPP tile data
+             *      - pointer to some location in VRAM
+             *      - 1 number of tiles
+             *      - pointer to 0f000000
+             * I suspect this is another tile unpack function
+             * */
+            BIOS2BPPTileUnpack6028();
+            break;
+        case 0x6a0e:
+            // 6a0e is used as an "alternative" to 66d0
+            // Look at 0e003e5e/0e003e92 in Animeland
         case 0x66d0:
             // Memcpy like routine
             BIOSMemcpy66d0();

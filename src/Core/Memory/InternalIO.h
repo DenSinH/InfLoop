@@ -35,23 +35,23 @@ public:
     }
 
     constexpr void Init() override {
-        SetImplemented(static_cast<u8>(InternalIORegister::DMAOR));
+        SetReadWriteField<&InternalIO::DMAOR>(static_cast<u8>(InternalIORegister::DMAOR));
         SetImplemented(static_cast<u8>(InternalIORegister::SAR0));
         SetImplemented(static_cast<u8>(InternalIORegister::DAR0));
         SetImplemented(static_cast<u8>(InternalIORegister::TCR0));
-        SetImplemented(static_cast<u8>(InternalIORegister::CHCR0));
+        SetReadWriteField<&InternalIO::DMACHCR0>(static_cast<u8>(InternalIORegister::CHCR0));
         SetImplemented(static_cast<u8>(InternalIORegister::SAR1));
         SetImplemented(static_cast<u8>(InternalIORegister::DAR1));
         SetImplemented(static_cast<u8>(InternalIORegister::TCR1));
-        SetImplemented(static_cast<u8>(InternalIORegister::CHCR1));
+        SetReadWriteField<&InternalIO::DMACHCR1>(static_cast<u8>(InternalIORegister::CHCR1));
         SetImplemented(static_cast<u8>(InternalIORegister::SAR2));
         SetImplemented(static_cast<u8>(InternalIORegister::DAR2));
         SetImplemented(static_cast<u8>(InternalIORegister::TCR2));
-        SetImplemented(static_cast<u8>(InternalIORegister::CHCR2));
+        SetReadWriteField<&InternalIO::DMACHCR2>(static_cast<u8>(InternalIORegister::CHCR2));
         SetImplemented(static_cast<u8>(InternalIORegister::SAR3));
         SetImplemented(static_cast<u8>(InternalIORegister::DAR3));
         SetImplemented(static_cast<u8>(InternalIORegister::TCR3));
-        SetImplemented(static_cast<u8>(InternalIORegister::CHCR3));
+        SetReadWriteField<&InternalIO::DMACHCR3>(static_cast<u8>(InternalIORegister::CHCR3));
         SetImplemented(static_cast<u8>(InternalIORegister::IPRA));
         SetImplemented(static_cast<u8>(InternalIORegister::IPRB));
         SetImplemented(static_cast<u8>(InternalIORegister::IPRC));
@@ -63,4 +63,11 @@ protected:
 
 private:
     friend class Initializer;
+    friend class Memory;
+
+    u16 DMAOR;
+    u16 DMACHCR0 = 0;
+    u16 DMACHCR1 = 0;
+    u16 DMACHCR2 = 0;
+    u16 DMACHCR3 = 0;
 };

@@ -49,6 +49,23 @@ protected:
         ReadPrecall[address >> 1] = cb;
     }
 
+    template<auto v>
+    void SetReadWriteField(u32 address) {
+        SetWriteCallback(address, &MMIOBase<s, c>::WriteToField<v>);
+        SetReadPrecall(address, &MMIOBase<s, c>::ReadFromField<v>);
+        SetImplemented(address);
+    }
+
+    template<u16 c::*v>
+    READ_PRECALL(ReadFromField) {
+        return reinterpret_cast<c*>(this)->*v;
+    }
+
+    template<u16 c::*v>
+    WRITE_CALLBACK(WriteToField) {
+        reinterpret_cast<c*>(this)->*v = value;
+    }
+
 private:
 
     std::array<bool, (s >> 1)> Implemented = {false};
