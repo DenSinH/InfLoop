@@ -184,8 +184,7 @@ private:
     void BIOSKanaUnpack5f4c();
     void BIOS4x4TileUnpack2BPP60a4();
     void BIOS2BPPTileUnpack6028();
-    void BIOSMemcpy66d0();
-    void BIOSMemset6a0e();
+    void BIOSMemcpyOrSet();
 
     template<typename T>
     static constexpr ALWAYS_INLINE u32 SignExtend(T value) {

@@ -123,7 +123,9 @@ T Memory::Read(u32 address) {
                         return IOVideoInterface.Read<T, safe>(address);
                     }
                     goto unhandled;
-                // case 0x050:
+                case 0x050:
+                    // Animeland FUN_0e0147b4 might be interesting for this region
+                    // sets of 2 ushort registers with flags
                 case 0x052:
                 case 0x059:
                 case 0x05a:
@@ -205,6 +207,9 @@ void Memory::Write(u32 address, T value) {
                     WriteArrayBE<T>(TileMap, address & 0x0fff, value);
                     return;
                 case 0x041 ... 0x04f:
+                    if ((address & 0xffff) > 0x4000 && (address & 0xffff) < 0x4080) {
+                        *Paused = true;
+                    }
                     WriteArrayBE<T>(TileData, (address & 0xffff) - 0x1000, value);
                     return;
                 case 0x051:

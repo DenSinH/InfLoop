@@ -51,8 +51,7 @@ add_executable(InfLoop
         modules/KHR/khrplatform.h
         debugging.h
         init.cpp
-        init.h
-)
+        init.h)
 
 # add link time optimizations for extra speed
 if( ipo_supported )

@@ -1,74 +1,38 @@
 #include "SH7021.h"
 
-void SH7021::BIOSMemcpy66d0() {
-    /* r4: ptr to struct:
-     * This struct seems to be padded to align by 4 bytes as follows:
-     * struct {
-     *  u16 flags;
-     *  u16 _padding;
-     *  u32 src_addr;
-     *  u32 dest_addr;
-     *  u16 len;  // units, not bytes
-     *  u16 _padding;
-     * }
-     * This would then correspond with the DMA registers basically, except for the "flags" field
-     * r5: DMA channel to use
-     *
-     * It seems like no bits other than destination/source control would be used
-     * other bits dont seem useful for a simple memcpy anyway.
-     *
-     *  - 1 is used to transfer PRAM to some pointer that is then cleared again
-     *  - 1 is used to transfer from some IO register at 0x0c05'f000 into an array in RAM
-     * and the main reason:
-     *  - 4 is used to transfer a bitmap that was decompressed into RAM over to bitmap RAM at 0x0c00'0000
-     *    if bitmap RAM is accessed directly, why wouldn't it just be decompressed directly in there?
-     *
-     *  - 5 is used to transfer 2 words from VRAM to cfff3000 (mirror of IO?)
-     * */
-    u32 data_ptr = R[4];  // first arg
-    u32 flags    = Mem->Read<u16>(data_ptr);
-    u32 src      = Mem->Read<u32>(data_ptr + 4);
-    u32 dest     = Mem->Read<u32>(data_ptr + 8);
-    u32 len      = Mem->Read<u16>(data_ptr + 12);
-    log_debug("BIOS memcpy: %x, %x -> %x, %x", flags, src, dest, len);
+/* Memcpy / memset routines:
+ *
+ * r4: ptr to stream of structs:
+ * This struct seems to be padded to align by 4 bytes as follows:
+ * struct {
+ *  u16 flags;
+ *  u16 _padding;
+ *  u32 src_addr;
+ *  u32 dest_addr;
+ *  u16 len;  // units, not bytes
+ *  u16 _padding;
+ * }
+ *
+ * IF flags == 0xffff: END OF STREAM!
+ *
+ * This would then correspond with the DMA registers basically, except for the "flags" field
+ * r5: DMA channel to use (for 66d0)
+ *
+ * It seems like no bits other than destination/source control would be used
+ * other bits dont seem useful for a simple memcpy anyway.
+ *
+ *  - 1 is used to transfer PRAM to some pointer that is then cleared again
+ *  - 1 is used to transfer from some IO register at 0x0c05'f000 into an array in RAM
+ * and the main reason:
+ *  - 4 is used to transfer a bitmap that was decompressed into RAM over to bitmap RAM at 0x0c00'0000
+ *    if bitmap RAM is accessed directly, why wouldn't it just be decompressed directly in there?
+ *
+ *  - 5 is used to transfer 2 words from VRAM to cfff3000 (mirror of IO?)
+ * */
 
-    if (flags == 0 || flags == 1 || flags == 4) {
-        /* r4: ptr to data struct
-         * r5: DMA channel used?  todo: compare struct with DMA registers
-         * Judging from FUN_0e00eda0 in Animeland (specifically:
-         *  ushort local3c = 0xffff;
-         *  for (int i = 0; i < 4; i++) {
-         *    bios_6a48(&local3c);
-         *    waitforvblank();
-         *    int var4 = i + 1;
-         *    int dest = 0x100 * i + ptr_into_huge_struct;
-         *    int var5 = 0x300 + i;
-         *    while (var5 < 0x3e0) {
-         *      *c05b00a = var5;
-         *      *c058006 = 1;
-         *      while (*c058004 & 0xff != var4) {}
-         *      data_struct.dest = dest;  // ??
-         *      (bios_66d0)(&data_struct, 3);
-         *      var4 += 4;
-         *      dest += 0x400;  // <-- THIS, length in struct holds 80, loop is 4 times
-         *                      // I suspect that this means 100h bytes per loop, which would mean word transfers
-         *      var5 += 4;
-         *    }
-         *  }
-         * */
-        for (u32 i = 0; i < len; i++) {
-            Mem->Write<u16>(dest, Mem->Read<u16>(src));
-            dest += 2;
-            src  += 2;
-        }
-    }
-    else {
-        log_fatal("Unknown BIOS memcpy flag setting: %x", flags);
-    }
-}
-
-void SH7021::BIOSMemset6a0e() {
+void SH7021::BIOSMemcpyOrSet() {
     /*
+     * (Originally this was just the call to 6a0e
      * The data passed to this function looks very very similar to that of memcpy.
      * Look at 0e004008 in Animeland to see a more obvious example of it's function.
      * The structs are the same size, I think the flag might indicate memcpy: see 0e003e5e/0e003e92 in Animeland
@@ -83,32 +47,50 @@ void SH7021::BIOSMemset6a0e() {
      *  u16 len;   // units, not bytes
      *  u16 _padding;
      * }
+     *
+     * IF flags == 0xffff: END OF STREAM!
+     * this behavior of the flags actually explains the padding. There is not padding, rather there is just a ushort
+     * in between every struct, but because these are smaller than words, and the struct would be 12 bytes long, there
+     * is padding there!
      * */
     u32 data_ptr = R[4];  // first arg
-    u32 flags    = Mem->Read<u16>(data_ptr);
 
     // flags seem to indicate whether it should be copied or set
-    if (flags == 5 || flags == 0xffff) {
-        u32 dest     = Mem->Read<u32>(data_ptr + 4);
-        u16 mask     = Mem->Read<u16>(data_ptr + 8);
-        u16 val      = Mem->Read<u16>(data_ptr + 10);
-        u32 len      = Mem->Read<u16>(data_ptr + 12);
-        log_debug("BIOS memset: %x, (%x & %04x) | %x, %x", flags, dest, mask, val, len);
+    while (true) {
+        u32 flags = Mem->Read<u16>(data_ptr);
+        if (flags == 5) {
+            u32 dest     = Mem->Read<u32>(data_ptr + 4);
+            u16 mask     = Mem->Read<u16>(data_ptr + 8);
+            u16 val      = Mem->Read<u16>(data_ptr + 10);
+            u32 len      = Mem->Read<u16>(data_ptr + 12);
+            log_debug("BIOS memset: %x, (%x & %04x) | %x, %x", flags, dest, mask, val, len);
 
-        for (u32 i = 0; i < len; i++) {
-            Mem->Write<u16>(dest, (Mem->Read<u16>(dest) & mask) | val);
-            dest += 2;
+            for (u32 i = 0; i < len; i++) {
+                Mem->Write<u16>(dest, (Mem->Read<u16>(dest) & mask) | val);
+                dest += 2;
+            }
         }
-    }
-    else if (flags == 0 || flags == 1 || flags == 4) {
-        log_debug("Memcpy from 6a0e with flag %x", flags);
-        BIOSMemcpy66d0();
-    }
-    else {
-        log_fatal("Unknown BIOS memcpy flag setting: %x", flags);
-    }
+        else if (flags == 0xffff) {
+            break;
+        }
+        else if (flags == 0 || flags == 1 || flags == 4) {
+            // these flags probably signify slight differences, but I haven't been able to deduce this
+            u32 src      = Mem->Read<u32>(data_ptr + 4);
+            u32 dest     = Mem->Read<u32>(data_ptr + 8);
+            u32 len      = Mem->Read<u16>(data_ptr + 12);
+            log_debug("BIOS memcpy: %x, %x -> %x, %x", flags, src, dest, len);
+            for (u32 i = 0; i < len; i++) {
+                Mem->Write<u16>(dest, Mem->Read<u16>(src));
+                dest += 2;
+                src  += 2;
+            }
+        }
+        else {
+            log_fatal("Unknown BIOS memcpy flag setting: %x", flags);
+        }
 
-    // *Paused = true;
+        data_ptr += 0x10; // sizeof(struct)
+    }
 }
 
 void SH7021::UnpackTile2BPP(u32 src, u32 dest, u32 offset) {
@@ -298,15 +280,9 @@ void SH7021::BIOSCall() {
             BIOS2BPPTileUnpack6028();
             break;
         case 0x6a0e:
-            // memset like routine
-            BIOSMemset6a0e();
-            break;
         case 0x66d0:
-            // Memcpy like routine
-            // BIOSMemcpy66d0();
-            // flags might be set such that it's not a normal memcpy
-            BIOSMemset6a0e();
-            break;
+            // same as above, except with DMA channel (r5 argument)
+            BIOSMemcpyOrSet();
         default:
         bios_call_default:
             log_debug("Unknown BIOS call");
