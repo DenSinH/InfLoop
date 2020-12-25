@@ -32,7 +32,7 @@ void SH7021::BIOSMemcpy66d0() {
     u32 len      = Mem->Read<u16>(data_ptr + 12);
     log_debug("BIOS memcpy: %x, %x -> %x, %x", flags, src, dest, len);
 
-    if (flags == 1 || flags == 4 || flags == 5) {
+    if (flags == 0 || flags == 1 || flags == 4) {
         /* r4: ptr to data struct
          * r5: DMA channel used?  todo: compare struct with DMA registers
          * Judging from FUN_0e00eda0 in Animeland (specifically:
@@ -65,6 +65,50 @@ void SH7021::BIOSMemcpy66d0() {
     else {
         log_fatal("Unknown BIOS memcpy flag setting: %x", flags);
     }
+}
+
+void SH7021::BIOSMemset6a0e() {
+    /*
+     * The data passed to this function looks very very similar to that of memcpy.
+     * Look at 0e004008 in Animeland to see a more obvious example of it's function.
+     * The structs are the same size, I think the flag might indicate memcpy: see 0e003e5e/0e003e92 in Animeland
+     * 6a0e is used as an "alternative" to 66d0, but actually there's just a different sort of struct of the same size on
+     * the stack. This struct is pointed to by r4 and holds:
+     * struct {
+     *  u16 flags;
+     *  u16 _padding;
+     *  u32 dest;
+     *  u16 mask;  // so for example f800: mem = (mem & mask) | value
+     *  u16 value;
+     *  u16 len;   // units, not bytes
+     *  u16 _padding;
+     * }
+     * */
+    u32 data_ptr = R[4];  // first arg
+    u32 flags    = Mem->Read<u16>(data_ptr);
+
+    // flags seem to indicate whether it should be copied or set
+    if (flags == 5 || flags == 0xffff) {
+        u32 dest     = Mem->Read<u32>(data_ptr + 4);
+        u16 mask     = Mem->Read<u16>(data_ptr + 8);
+        u16 val      = Mem->Read<u16>(data_ptr + 10);
+        u32 len      = Mem->Read<u16>(data_ptr + 12);
+        log_debug("BIOS memset: %x, (%x & %04x) | %x, %x", flags, dest, mask, val, len);
+
+        for (u32 i = 0; i < len; i++) {
+            Mem->Write<u16>(dest, (Mem->Read<u16>(dest) & mask) | val);
+            dest += 2;
+        }
+    }
+    else if (flags == 0 || flags == 1 || flags == 4) {
+        log_debug("Memcpy from 6a0e with flag %x", flags);
+        BIOSMemcpy66d0();
+    }
+    else {
+        log_fatal("Unknown BIOS memcpy flag setting: %x", flags);
+    }
+
+    // *Paused = true;
 }
 
 void SH7021::UnpackTile2BPP(u32 src, u32 dest, u32 offset) {
@@ -112,7 +156,6 @@ void SH7021::BIOS2BPPTileUnpack6028() {
     for (int i = 0; i < count; i++) {
         UnpackTile2BPP(src + 0x10 * i, dest + 0x20 * i, 0);
     }
-    *Paused = true;
 }
 
 void SH7021::BIOS4x4TileUnpack2BPP60a4() {
@@ -161,6 +204,7 @@ void SH7021::BIOSKanaUnpack5f4c() {
     u32 src    = R[4];
     u32 dest   = R[5];
     u32 offset = R[6];
+    log_debug("BIOS kana unpack: %x -> %x, +%x", src, dest, offset);
 
     for (u32 i = 0; i < 2; i++) {
         UnpackTile2BPP(src, dest, offset);
@@ -221,7 +265,6 @@ void SH7021::BIOSCall() {
 
     switch(PC) {
         case 0x437c:
-            *Paused = true;
             goto bios_call_default;
         case 0x445c:
             BIOSBitmapUncomp445c();
@@ -255,16 +298,18 @@ void SH7021::BIOSCall() {
             BIOS2BPPTileUnpack6028();
             break;
         case 0x6a0e:
-            // 6a0e is used as an "alternative" to 66d0
-            // Look at 0e003e5e/0e003e92 in Animeland
+            // memset like routine
+            BIOSMemset6a0e();
+            break;
         case 0x66d0:
             // Memcpy like routine
-            BIOSMemcpy66d0();
+            // BIOSMemcpy66d0();
+            // flags might be set such that it's not a normal memcpy
+            BIOSMemset6a0e();
             break;
         default:
         bios_call_default:
             log_debug("Unknown BIOS call");
-            // *Paused = true;
             break;
     }
 

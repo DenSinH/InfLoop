@@ -169,6 +169,7 @@ private:
     INSTRUCTION(RTS);
 
     INSTRUCTION(NOP) {};
+    INSTRUCTION(CLRT);
 
 #define INLINED_INCLUDES
 #include "Instructions/DataTransfer.inl"
@@ -184,6 +185,7 @@ private:
     void BIOS4x4TileUnpack2BPP60a4();
     void BIOS2BPPTileUnpack6028();
     void BIOSMemcpy66d0();
+    void BIOSMemset6a0e();
 
     template<typename T>
     static constexpr ALWAYS_INLINE u32 SignExtend(T value) {

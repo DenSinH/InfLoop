@@ -47,7 +47,7 @@ private:
     u8 TileData[0xf000] = {};
     u8 PRAM[0x200]    = {};
     u8 ROM[0x20'0000] = {};  // 2MB ROMs
-    u8 ORAM[0x400]    = {};  // from MAME
+    u8 ORAM[0x400]    = {};  // on-chip RAM
     /* In the ROM headers of Animeland and Dream chase, the addresses 0x02000000 and 0x02001fff are set
      * My suspicion is this for the ROM header:
      * uint VBR
@@ -123,6 +123,7 @@ T Memory::Read(u32 address) {
                         return IOVideoInterface.Read<T, safe>(address);
                     }
                     goto unhandled;
+                // case 0x050:
                 case 0x052:
                 case 0x059:
                 case 0x05a:

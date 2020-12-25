@@ -70,7 +70,7 @@ CPU_INSTRUCTION(DIV1) {
     bool old_q, tmp1;
 
     old_q = SR.Q != 0;
-    SR.Q = (i32)R[n] < 0;
+    SR.Q = (R[n] & 0x8000'0000) ? 1 : 0;
     R[n] <<= 1;
     R[n] |= SR.T ? 1 : 0;
     if (!old_q) {
@@ -121,4 +121,5 @@ CPU_INSTRUCTION(DIV1) {
             }
         }
     }
+    SR.T = (SR.Q == SR.M) ? 1 : 0;
 }

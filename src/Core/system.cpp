@@ -12,8 +12,9 @@ Loopy::Loopy() {
     Paused      = false;
 
     // add_breakpoint(&Breakpoints, 0x0e003b50);
-    add_breakpoint(&Breakpoints, 0x0e0126c0);
-    // add_breakpoint(&Breakpoints, 0x0000'190e);
+    // add_breakpoint(&Breakpoints, 0x0e0126c0);
+//    add_breakpoint(&Breakpoints, 0x0e0109b2);
+//    add_breakpoint(&Breakpoints, 0x0e0109b8);
     // add_breakpoint(&Breakpoints, 0x0000'18d8);
     // add_breakpoint(&Breakpoints, 0x0800'c89e);
 //    add_breakpoint(&Breakpoints, 0x0800'a5d2);

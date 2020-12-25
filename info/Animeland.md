@@ -31,7 +31,7 @@ Interesting stuff found in the Animeland ROM:
  - `0x0e02'4c20` - `0x0e03'8f60`: 4bpp data for dancing girl tiles
  - `0x0e03'8f60` - `0x0e03'95a8`: pointers to (compressed?) data streams and data streams
  - `0x0e03'95a8` - `0x0e05'2ba8`: 58 tile maps? notice all the 4's everywhere?
- - `0x0e05'2ba8` - `0x0e0b'0ff4`: ???
+ - `0x0e05'2ba8` - `0x0e0b'0ff4`: Compressed tiles to be unpacked with BIOS 437c
  - `0x0e0b'0ff4` - `0x0e0b'2a94`: 4bpp tile data
  - `0x0e0b'2a94` - `0x0e0c'fe03`: table of pointers to byte streams (could this be text or compressed data streams?)
  - `0x0e0c'fe04` - `0x0e0d'5cc3`: table of pointers to byte streams (compressed data? (I suspect RLE) or bytecode/instructions for the printer. I see the value 7E 00 FF FF) a lot

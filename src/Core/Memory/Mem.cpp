@@ -83,7 +83,7 @@ void Memory::DoDMA(int i, u16 DMACHCR) {
     if (!len) {
         len = 0x10000;
     }
-    log_dma("DMA %x -> %x, length %x size %x", sad, dad, len, size * 8);
+    log_dma("DMA %x -> %x, length %x size %d", sad, dad, len, size * 8);
     // *Paused = true;
 
     if (size == 1) {

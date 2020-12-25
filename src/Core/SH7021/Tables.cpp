@@ -255,6 +255,8 @@ SH7021Instruction GetInstruction(u16 instruction) {
     }
 
     switch (instruction) {
+        case 0x0008:
+            return &SH7021::CLRT;
         case 0x0009:
             return &SH7021::NOP;
         case 0x000b:
