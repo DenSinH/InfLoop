@@ -6,3 +6,5 @@
  - 6b50 (Animeland, setup?)
  - 613c (Animeland, setup?)
  - 61a0 (Animeland, decompression?)
+ - 66d0: memory copy / replace with DMA
+ - 6a0e: same as before, but without DMA

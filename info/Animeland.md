@@ -58,5 +58,5 @@ Except the entry at offset 120h, which is the DMAC0/1 priority 3 interrupt.
 The handler pushes all registers onto the stack, and calls 6238h as
 `(sub_6238h)(0x0900'1008, 0xff)`
 then it pops every single register again and returns.
-    
+   
  

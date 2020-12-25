@@ -86,6 +86,8 @@ SH7021Instruction GetInstruction(u16 instruction) {
             return &SH7021::DIV1;
         case 0x600b:
             return &SH7021::NEG;
+        case 0x600a:
+            return &SH7021::NEGC;
         case 0x3008:
             return &SH7021::SUB;
         case 0x300a:

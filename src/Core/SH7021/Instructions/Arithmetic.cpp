@@ -45,6 +45,12 @@ CPU_INSTRUCTION(NEG) {
     R[instruction.nm.n] = -R[instruction.nm.m];
 }
 
+CPU_INSTRUCTION(NEGC) {
+    u32 temp = -R[instruction.nm.m];
+    R[instruction.nm.n] = -R[instruction.nm.m] - (SR.T ? 1 : 0);
+    SR.T = (temp != 0 || (temp < R[instruction.nm.n])) ? 1 : 0;
+}
+
 CPU_INSTRUCTION(DIV0U) {
     SR.M = 0;
     SR.Q = 0;

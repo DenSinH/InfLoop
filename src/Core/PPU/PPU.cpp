@@ -67,7 +67,6 @@ void LoopyPPU::DrawTile(u16 *dest, size_t index, size_t target_width, u32 palett
             else {
                 tile_data >>= 4;
             }
-
             u16 color = ReadArrayBE<u16>(Mem->PRAM, (tile_data + (palette_bank << 4)) << 1);
             dest[y * target_width + x] = color;
         }
@@ -100,3 +99,12 @@ void LoopyPPU::OnTileMapClick(bool left) {
     }
     TileMapHeatmapOffset &= 0xff;
 }
+
+/*
+ * How the tile map is built up:
+ *  2 sections of 0x700 bytes (0x380 shorts). These shorts hold a tile ID (I think the bottom 8 or 9 bits)
+ *  bits
+ *  0 - 9: Tile ID
+ *
+ *
+ * */
