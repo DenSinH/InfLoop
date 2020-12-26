@@ -116,7 +116,7 @@ void SH7021::BIOS2BPPTileUnpack6028() {
      *
      * r4: pointer to tile data
      * r5: destination pointer
-     * r6: offset
+     * r6: count
      * r7: some pointer? maybe some usable buffer for the function to use while unpacking
      *
      * See Animeland function at 0e008002
@@ -193,6 +193,7 @@ void SH7021::BIOSKanaUnpack5f4c() {
         src  += 0x10;
         dest += 0x20;
     }
+    *Paused = true;
 }
 
 void SH7021::BIOSBitmapUncomp445c() {
