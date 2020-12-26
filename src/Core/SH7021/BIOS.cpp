@@ -112,7 +112,7 @@ void SH7021::UnpackTile2BPP(u32 src, u32 dest, u32 offset) {
 
 void SH7021::BIOSDouble2BPP8x81DTo4BPP16x162D6028() {
     /*
-     * I think this function is similar to BIOSKanaUnpack2D5f4c, except now it's for a single tile
+     * I think this function is similar to BIOS1BPP16x16To4BPP2D5f4c, except now it's for a single tile
      *
      * r4: pointer to tile data
      * r5: destination pointer
@@ -192,7 +192,7 @@ void SH7021::BIOSDouble2BPP8x81DTo4BPP16x162D6028() {
 
 void SH7021::BIOS4x4TileUnpack2BPP60a4() {
     /*
-     * I think this function is similar to BIOSKanaUnpack2D5f4c, except now it's for a 4x4 set of 2BPP tiles
+     * I think this function is similar to BIOS1BPP16x16To4BPP2D5f4c, except now it's for a 4x4 set of 2BPP tiles
      *
      * r4: pointer to tile data
      * r5: destination pointer
@@ -221,11 +221,8 @@ void SH7021::BIOS4x4TileUnpack2BPP60a4() {
     }
 }
 
-void SH7021::BIOSKanaUnpack2D5f4c() {
-    /* I am unsure, but this routine probably always unpacks 2 tiles
-     * Considering the context, this routine was called 3 times in a row, with destination addresses incrementing
-     * by 0x40 every time.
-     * On top of that, Kana would look "look like ass" (Marie) in only one tile.
+void SH7021::BIOS1BPP16x16To4BPP2D5f4c() {
+    /* Unpacks 16x16 1BPP tile data to 4 4BPP laid out in the 2D manner the PPU wants.
      *
      * r4: pointer to tile data
      * r5: destination pointer
@@ -248,18 +245,19 @@ void SH7021::BIOSKanaUnpack2D5f4c() {
                 u8 PixelGroup = Mem->Read<u8>(src);  // 4 pixels at 2BPP
                 src++;
                 u32 result = 0;
-                for (int sp = 0; sp < 4; sp++) {
-                    // right tile
+                for (int sp = 0; sp < 8; sp++) {
+                    // duplicate pixel
+                    // actual loopy does something to make the lines more crisp
+                    // I haven't figured out what yet
                     result >>= 4;
-                    result |= ((PixelGroup & 3) + offset) << 28;
-                    result >>= 4;
-                    result |= ((PixelGroup & 3) + offset) << 28;
-                    PixelGroup >>= 2;
+                    result |= ((PixelGroup & 1) + offset) << 28;
+                    PixelGroup >>= 1;
                 }
                 Mem->Write<u32>(dest + x_offs + offs, result);
             }
             dest += 4;
         }
+        // correct for tile offset (bottom tile should be at same offset within 2D mapping)
         dest -= 0x20;
 //        UnpackTile2BPP(src, dest, offset);
 //        src  += 0x10;
@@ -347,7 +345,7 @@ void SH7021::BIOSCall() {
              * Animeland calls it as (3, 2, u8[36]) // last value might be a struct of some sort
              * I suspect it might be setting up a DMA channel or something?
              * */
-            BIOSKanaUnpack2D5f4c();
+            BIOS1BPP16x16To4BPP2D5f4c();
             break;
         case 0x60a4:
             /*

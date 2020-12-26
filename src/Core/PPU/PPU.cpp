@@ -74,7 +74,7 @@ void* LoopyPPU::DrawScreen(u32 i) {
     for (int y = 0; y < 28; y++) {
         for (int x = 0; x < 32; x++) {
             u16 entry = ReadArrayBE<u16>(Mem->TileMap, i * 0x700 + 2 * ( y * 32 + x));
-            u16 index = entry & 0x3ff;
+            u16 index = entry & 0x7ff;
             u16 palette_index = (entry >> 12) & 3;
             bool HFlip = (entry & 0x4000) != 0;
             bool VFlip = (entry & 0x8000) != 0;

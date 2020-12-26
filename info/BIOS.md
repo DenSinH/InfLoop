@@ -7,7 +7,7 @@
  - 613c (Animeland, setup?)
  - 437c Decompression (4 bit)
  - 445c Decompression (8 bit)
- - 6028 2BPP tile unpacking
+ - 6028 1BPP 16x16 to 4BPP 2D mapping unpack
  - 60a4 4x4 2BPP tile unpacking
  - 66d0: memory copy / replace with DMA
  - 6a0e: same as before, but without DMA
