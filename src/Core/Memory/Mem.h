@@ -207,6 +207,9 @@ void Memory::Write(u32 address, T value) {
                     WriteArrayBE<T>(TileMap, address & 0x0fff, value);
                     return;
                 case 0x041 ... 0x04f:
+                    if ((address & 0xffff) > 0xd400 && (address & 0xffff) < 0xe600) {
+                        *Paused = true;
+                    }
                     WriteArrayBE<T>(TileData, (address & 0xffff) - 0x1000, value);
                     return;
                 case 0x051:

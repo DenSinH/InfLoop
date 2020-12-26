@@ -182,9 +182,9 @@ private:
 
     void BIOSBitmapUncomp445c();
     void UnpackTile2BPP(u32 src, u32 dest, u32 offset);
-    void BIOSKanaUnpack5f4c();
+    void BIOSKanaUnpack2D5f4c();
     void BIOS4x4TileUnpack2BPP60a4();
-    void BIOS2BPPTileUnpack6028();
+    void BIOSDouble2BPP8x81DTo4BPP16x162D6028();
     void BIOSMemcpyOrSet();
     void BIOSMemcpy16_2f74();
 

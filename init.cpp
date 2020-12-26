@@ -301,12 +301,24 @@ Loopy* Initializer::init() {
         256,224,
         [](bool left) { loopy->PPU.OnTileMapClick(left); }
     );
-
     add_image_window("Tilemap 1",
         [](){ return loopy->PPU.DrawTileMap(1); }, true,
         256,224,
                      256,224,
         [](bool left) { loopy->PPU.OnTileMapClick(left); }
+    );
+
+    add_image_window("Screen 0",
+        [](){ return loopy->PPU.DrawScreen(0); }, true,
+        256,224,
+                     256,224,
+        [](bool left) { loopy->PPU.OnScreenClick(0, left); }
+    );
+    add_image_window("Screen 1",
+        [](){ return loopy->PPU.DrawScreen(1); }, true,
+        256,224,
+                     256,224,
+        [](bool left) { loopy->PPU.OnScreenClick(1, left); }
     );
 
 
