@@ -110,9 +110,9 @@ void SH7021::UnpackTile2BPP(u32 src, u32 dest, u32 offset) {
     }
 }
 
-void SH7021::BIOSDouble2BPP8x81DTo4BPP16x162D6028() {
+void SH7021::BIOSMultiple1BPP16x16To4BPP16x162D6028() {
     /*
-     * I think this function is similar to BIOS1BPP16x16To4BPP2D5f4c, except now it's for a single tile
+     * I think this function is similar to BIOS1BPP16x16To4BPP2D5f4c, except now it's for multiple tiles
      *
      * r4: pointer to tile data
      * r5: destination pointer
@@ -120,7 +120,7 @@ void SH7021::BIOSDouble2BPP8x81DTo4BPP16x162D6028() {
      * r7: some pointer? maybe some usable buffer for the function to use while unpacking
      *
      * See Animeland function at 0e008002
-     * Source is an array of 2BPP tile data
+     * Source is an array of 1BPP tile data
      * dest is some pointer incremented by 0x20 every loop
      * third argument is 1 here
      * fourth argument might be some pointer but I don't know
@@ -144,49 +144,38 @@ void SH7021::BIOSDouble2BPP8x81DTo4BPP16x162D6028() {
     u32 dest   = R[5];
     u32 count  = R[6];
     log_debug("BIOS tile unpack: %d x %x -> %x", count, src, dest);
+    *Paused = true;
 
     for (int i = 0; i < count; i++) {
-        UnpackTile2BPP(src + 0x10 * i, dest + 0x20 * i, 0);
         // 4 16x16 tiles next to each other in 2D mapping
-//        for (int j = 0; j < 4 && i < count; j++, i++) {
-//            // upper tile
-//            for (int p = 0; p < 8 * 8; p += 4) {
-//                // 4 pixels per loop
-//                u8 PixelGroup = Mem->Read<u8>(src);  // 4 pixels at 2BPP
-//                src++;
-//                u32 result = 0;  // making the tile wider
-//                for (int sp = 0; sp < 4; sp++) { // subpixel
-//                    result >>= 4;
-//                    result |= (PixelGroup & 3) << 28;
-//                    result >>= 4;
-//                    result |= (PixelGroup & 3) << 28;
-//                    PixelGroup >>= 2;
-//                }
-//                Mem->Write<u32>(dest, result);
-//                dest += 4;
-//            }
-//
-//            // lower
-//            for (int p = 0; p < 8 * 8; p += 4) {
-//                // 4 pixels per loop
-//                u8 PixelGroup = Mem->Read<u8>(src);  // 4 pixels at 2BPP
-//                src++;
-//                u32 result = 0;  // making the tile wider
-//                for (int sp = 0; sp < 4; sp++) { // subpixel
-//                    result >>= 4;
-//                    result |= (PixelGroup & 3) << 28;
-//                    result >>= 4;
-//                    result |= (PixelGroup & 3) << 28;
-//                    PixelGroup >>= 2;
-//                }
-//                // extra offset for
-//                Mem->Write<u32>(dest + 0x20 * 8, result);
-//                dest += 4;
-//            }
-//        }
-//
-//        // account for 2D mapping
-//        dest += 0x20 * 8;
+        for (u32 offs : { 0, 0x100 }) {
+            for (int dy = 0; dy < 8; dy++) {
+                // 4 pixels per loop
+                for (u32 x_offs : { 0, 0x20 }) {
+                    u8 PixelGroup = Mem->Read<u8>(src);  // 8 pixels at 1BPP
+                    src++;
+                    u32 result = 0;
+                    for (int sp = 0; sp < 8; sp++) {
+                        // duplicate pixel
+                        // actual loopy does something to make the lines more crisp
+                        // I haven't figured out what yet
+                        result >>= 4;
+                        result |= (PixelGroup & 1) << 28;
+                        PixelGroup >>= 1;
+                    }
+                    Mem->Write<u32>(dest + x_offs + offs, result);
+                }
+                dest += 4;
+            }
+            // correct for tile offset (bottom tile should be at same offset within 2D mapping)
+            dest -= 0x20;
+        }
+        // every tile should increment the offset
+        dest += 0x20;
+        if (dest & 0x100) {
+            // not to interfere with the 2D mapping
+            dest += 0x100;
+        }
     }
 }
 
@@ -242,7 +231,7 @@ void SH7021::BIOS1BPP16x16To4BPP2D5f4c() {
         for (int dy = 0; dy < 8; dy++) {
             // 4 pixels per loop
             for (u32 x_offs : { 0, 0x20 }) {
-                u8 PixelGroup = Mem->Read<u8>(src);  // 4 pixels at 2BPP
+                u8 PixelGroup = Mem->Read<u8>(src);  // 8 pixels at 1BPP
                 src++;
                 u32 result = 0;
                 for (int sp = 0; sp < 8; sp++) {
@@ -259,9 +248,6 @@ void SH7021::BIOS1BPP16x16To4BPP2D5f4c() {
         }
         // correct for tile offset (bottom tile should be at same offset within 2D mapping)
         dest -= 0x20;
-//        UnpackTile2BPP(src, dest, offset);
-//        src  += 0x10;
-//        dest += 0x20;
     }
 }
 
@@ -365,7 +351,7 @@ void SH7021::BIOSCall() {
              *      - pointer to 0f000000
              * I suspect this is another tile unpack function
              * */
-            BIOSDouble2BPP8x81DTo4BPP16x162D6028();
+            BIOSMultiple1BPP16x16To4BPP16x162D6028();
             break;
         case 0x6a0e:
         case 0x66d0:
