@@ -1,6 +1,6 @@
 # Known BIOS calls:
  - 668 (Animeland, almost first thing, boot screen?)
- - 6644 (Animeland)
+ - 6644 (Animeland, always called before Kana unpack)
  - 5f4c (2bpp kana unpacking routine)
  - 6ac0 (Animeland, setup?)
  - 6b50 (Animeland, setup?)

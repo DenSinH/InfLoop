@@ -27,6 +27,12 @@ int main() {
     std::thread ui_thread(ui_run);
 
     loopy->LoadROM("D:\\Data\\CProjects\\InfLoop\\files\\roms\\Animeland.bin");
+    // loopy->LoadROM("D:\\Data\\CProjects\\InfLoop\\files\\roms\\Dream_Change.bin");
+    // loopy->LoadROM("D:\\Data\\CProjects\\InfLoop\\files\\roms\\HARIHARI Seal Paradise (Japan)_unswizzled.bin");
+    // loopy->LoadROM("D:\\Data\\CProjects\\InfLoop\\files\\roms\\Little Romance_unswizzled.bin");
+    // loopy->LoadROM("D:\\Data\\CProjects\\InfLoop\\files\\roms\\LoopyTown_unswizzled.bin");
+    // loopy->LoadROM("D:\\Data\\CProjects\\InfLoop\\files\\roms\\Lupiton no Wonder Palette (Japan)_unswizzled.bin");
+    // loopy->LoadROM("D:\\Data\\CProjects\\InfLoop\\files\\roms\\Wanwan Aijou Monogatari (Japan)_unswizzled.bin");
     loopy->Run();
 
     ui_thread.join();

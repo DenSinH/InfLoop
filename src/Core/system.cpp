@@ -15,14 +15,12 @@ Loopy::Loopy() {
     // add_breakpoint(&Breakpoints, 0x0e0126c0);
 //    add_breakpoint(&Breakpoints, 0x0e0109b2);
 //    add_breakpoint(&Breakpoints, 0x0e0109b8);
-    // add_breakpoint(&Breakpoints, 0x0000'18d8);
-    // add_breakpoint(&Breakpoints, 0x0800'c89e);
-//    add_breakpoint(&Breakpoints, 0x0800'a5d2);
-//    add_breakpoint(&Breakpoints, 0x0800'a5a6);
-//    add_breakpoint(&Breakpoints, 0x0800'9702);
-    // add_breakpoint(&Breakpoints, 0x00000f60);
-    // add_breakpoint(&Breakpoints, 0x000000128);
-    // add_breakpoint(&Breakpoints, 0x08000134);
+//     add_breakpoint(&Breakpoints, 0x0e0135da);
+//     add_breakpoint(&Breakpoints, 0x0e0135e4);
+//     add_breakpoint(&Breakpoints, 0x0e0135ea);
+//     add_breakpoint(&Breakpoints, 0x0e0135f0);
+//     add_breakpoint(&Breakpoints, 0x0e0135fa);
+//     add_breakpoint(&Breakpoints, 0x0e016ed8);
 #endif
 }
 

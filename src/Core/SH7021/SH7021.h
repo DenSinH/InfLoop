@@ -91,7 +91,7 @@ private:
     u32   PR    = 0;           // Procedure Register
     u32   MACL  = 0;           // Multiply and Accumulate registers
     u32   MACH  = 0;           // Multiply and Accumulate registers
-    s_SR  SR    = {.I = 0xf};  // Status Register
+    s_SR  SR    = { .raw = 0x0000'00f0 };  // Status Register
     u32   GBR   = 0;           // Global Base Register (base of GBR addressing mode)
     u32   VBR   = 0;           // Vector Base Register (base of exception vector area)
 
@@ -186,6 +186,7 @@ private:
     void BIOS4x4TileUnpack2BPP60a4();
     void BIOS2BPPTileUnpack6028();
     void BIOSMemcpyOrSet();
+    void BIOSMemcpy16_2f74();
 
     template<typename T>
     static constexpr ALWAYS_INLINE u32 SignExtend(T value) {

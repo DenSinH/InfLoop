@@ -193,7 +193,6 @@ void SH7021::BIOSKanaUnpack5f4c() {
         src  += 0x10;
         dest += 0x20;
     }
-    *Paused = true;
 }
 
 void SH7021::BIOSBitmapUncomp445c() {
@@ -219,6 +218,26 @@ void SH7021::BIOSBitmapUncomp445c() {
      * */
 }
 
+void SH7021::BIOSMemcpy16_2f74() {
+    /*
+     * Look at 0e014284 in Animeland. This function is called, with 2 pointers and an int (8). The data
+     * holds some stream, where the first int is 8. Then the first pointer passed to this function is used
+     * as argument to copy over the data that was set up by this call. The first int is read as length again.
+     * I think this is another memcpy routine for this, but a simple one:
+     * memcpy16(src, dest, len (- 1?))
+     * */
+    u32 src  = R[4];
+    u32 dest = R[5];
+    u32 len  = R[6];
+    log_debug("BIOS memcpy16: %08x -> %08x x %x", src, dest, len);
+
+    for (int i = 0; i < len; i++) {
+        Mem->Write<u16>(dest, Mem->Read<u16>(src));
+        dest += 2;
+        src  += 2;
+    }
+}
+
 void SH7021::BIOSCall() {
     log_debug("BIOS call: %08x [PR -> PC](%08x -> %08x)", PC, PR, PC);
     log_debug("Arguments: r4-r7: [%08x, %08x, %08x, %08x]", R[4], R[5], R[6], R[7]);
@@ -227,11 +246,6 @@ void SH7021::BIOSCall() {
      * Known unknown calls:
      *  - 668:  directly on boot (boot screen of some sort?)
      *  - 6644: setup for KanaUnpack?
-     *  - 613c:
-     *  - 66d0:
-     *  - 6a48:
-     *  - 6ac0:
-     *  - 6b50:
      *
      *  437c seems to be the same sort of compression as used by 445c, except 4 bits instead of 8 bits
      *  Arguments are
@@ -247,6 +261,9 @@ void SH7021::BIOSCall() {
      * */
 
     switch(PC) {
+        case 0x2f74:
+            BIOSMemcpy16_2f74();
+            break;
         case 0x437c:
             goto bios_call_default;
         case 0x445c:
@@ -284,6 +301,14 @@ void SH7021::BIOSCall() {
         case 0x66d0:
             // same as above, except with DMA channel (r5 argument)
             BIOSMemcpyOrSet();
+            break;
+        case 0x6644:
+            /*
+             * args: (int, int, void*)
+             * area pointed to seems to be 32 bytes.
+             * a pointer to this area is then also passed to the Kanaunpack routine
+             * */
+            goto bios_call_default;
         default:
         bios_call_default:
             log_debug("Unknown BIOS call");

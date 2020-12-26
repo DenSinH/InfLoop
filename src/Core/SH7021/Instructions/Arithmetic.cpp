@@ -38,7 +38,7 @@ CPU_INSTRUCTION(SUBC) {
     u32 result = op1 - op2 - carry_in;
     R[instruction.nm.n] = result;
 
-    SR.T = ((op2 + carry_in) <= op1) ? 1 : 0;
+    SR.T = ((op2 + carry_in) > op1) ? 1 : 0;
 }
 
 CPU_INSTRUCTION(NEG) {
@@ -61,8 +61,8 @@ CPU_INSTRUCTION(DIV0S) {
     const u16 n = instruction.nm.n;
     const u16 m = instruction.nm.m;
 
-    SR.Q = ((i32)R[n] < 0) ? 1 : 0;
-    SR.M = ((i32)R[m] < 0) ? 1 : 0;
+    SR.Q = (R[n] & 0x8000'0000) ? 1 : 0;
+    SR.M = (R[m] & 0x8000'0000) ? 1 : 0;
     SR.T = (SR.M != SR.Q) ? 1 : 0;
 }
 
