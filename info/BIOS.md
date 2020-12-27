@@ -1,5 +1,7 @@
 # Known BIOS calls:
  - 668 (Animeland, almost first thing, boot screen?)
+ - 2f74 A simple memcpy16
+ - 3ef0 Another simple memcpy16, but now in a weird swizzled order for visual effect (Animeland face appearing effect)?
  - 6644 (Animeland, always called before Kana unpack)
  - 5f4c (2bpp kana unpacking routine)
  - 6ac0 (Animeland, setup?)
@@ -13,16 +15,17 @@
  - 6a0e: same as before, but without DMA
  - 6a48: same as before (I really don't know what the difference is here)
 
-### 6628
+### 6028
 
-2BPP tile unpacking call. 
+1BPP 16x16 tiles to 4BPP 16x16 2D mapped tiles unpacking call. 
 ```
 r4: src, pointer to tile data
 r5: dest, destination pointer
 r6: count
 r7: some pointer? maybe some usable buffer for the function to use while unpacking
 ```
-Unpacks `count` 2BPP tiles from `src` to `dest` (2 -> 4BPP).
+Unpacks `count` 1BPP 16x16 tiles from `src` to `dest` (1 -> 4BPP), much like 5f4c, but repeated. 
+Also accounts for the offset in each row of the 2D mapping this way.
 
 ### 60a4
 
