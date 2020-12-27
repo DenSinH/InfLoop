@@ -85,6 +85,19 @@ void SH7021::BIOSMemcpyOrSet() {
                 src  += 2;
             }
         }
+        else if (flags == 3) {
+            // BIOS call 6a48 at 0e00fbbe in Animeland seems to want to copy 8 shorts, length specified is 4, so
+            // I suspect this means a copy of the length in long words
+            u32 src      = Mem->Read<u32>(data_ptr + 4);
+            u32 dest     = Mem->Read<u32>(data_ptr + 8);
+            u32 len      = Mem->Read<u16>(data_ptr + 12);
+            log_debug("BIOS memcpy: %x, %x -> %x, %x", flags, src, dest, len);
+            for (u32 i = 0; i < len; i++) {
+                Mem->Write<u32>(dest, Mem->Read<u32>(src));
+                dest += 4;
+                src  += 4;
+            }
+        }
         else {
             log_fatal("Unknown BIOS memcpy flag setting: %x", flags);
         }
@@ -136,46 +149,45 @@ void SH7021::BIOSMultiple1BPP16x16To4BPP16x162D6028() {
      *
      * It unpacks 0xda tiles to 90791ac, and later copies from as far as 907feac
      * Now, notice that
-     * 0x91ac + 0xda * 0x40 * 2 = 0xfeac
-     * (start address + number of tiles * size of double width tile * 2 double width tiles)
+     * 0x91ac + 0xda * 0x20 * 4 = 0xfeac
+     * (start address + number of tiles * size of tile * 2x2 tiles)
      * this can't be a coincidence.
      * */
     u32 src    = R[4];
     u32 dest   = R[5];
     u32 count  = R[6];
     log_debug("BIOS tile unpack: %d x %x -> %x", count, src, dest);
-    *Paused = true;
 
     for (int i = 0; i < count; i++) {
         // 4 16x16 tiles next to each other in 2D mapping
-        for (u32 offs : { 0, 0x100 }) {
-            for (int dy = 0; dy < 8; dy++) {
-                // 4 pixels per loop
-                for (u32 x_offs : { 0, 0x20 }) {
-                    u8 PixelGroup = Mem->Read<u8>(src);  // 8 pixels at 1BPP
-                    src++;
-                    u32 result = 0;
-                    for (int sp = 0; sp < 8; sp++) {
-                        // duplicate pixel
-                        // actual loopy does something to make the lines more crisp
-                        // I haven't figured out what yet
-                        result >>= 4;
-                        result |= (PixelGroup & 1) << 28;
-                        PixelGroup >>= 1;
+        for (int row = 0; row < 4 && i < count; row++, i++) {
+            for (u32 offs : { 0, 0x100 }) {
+                for (int dy = 0; dy < 8; dy++) {
+                    // 4 pixels per loop
+                    for (u32 x_offs : { 0, 0x20 }) {
+                        u8 PixelGroup = Mem->Read<u8>(src);  // 8 pixels at 1BPP
+                        src++;
+                        u32 result = 0;
+                        for (int sp = 0; sp < 8; sp++) {
+                            // duplicate pixel
+                            // actual loopy does something to make the lines more crisp
+                            // I haven't figured out what yet
+                            result >>= 4;
+                            result |= (PixelGroup & 1) << 28;
+                            PixelGroup >>= 1;
+                        }
+                        Mem->Write<u32>(dest + x_offs + offs, result);
                     }
-                    Mem->Write<u32>(dest + x_offs + offs, result);
+                    dest += 4;
                 }
-                dest += 4;
+                // correct for tile offset (bottom tile should be at same offset within 2D mapping)
+                dest -= 0x20;
             }
-            // correct for tile offset (bottom tile should be at same offset within 2D mapping)
-            dest -= 0x20;
+            // 2 tiles every time
+            dest += 0x40;
         }
-        // every tile should increment the offset
-        dest += 0x20;
-        if (dest & 0x100) {
-            // not to interfere with the 2D mapping
-            dest += 0x100;
-        }
+        // account for the 2D mapping
+        dest += 0x100;
     }
 }
 
@@ -297,7 +309,7 @@ void SH7021::BIOSMemcpy16_2f74() {
 void SH7021::BIOSCall() {
     log_debug("BIOS call: %08x [PR -> PC](%08x -> %08x)", PC, PR, PC);
     log_debug("Arguments: r4-r7: [%08x, %08x, %08x, %08x]", R[4], R[5], R[6], R[7]);
-    log_debug("Stack: [%08x, %08x, ...]", Mem->Read<u32, true>(R[15]), Mem->Read<u32, true>(R[15] + 4));
+    log_debug("Stack: @%08x: [%08x, %08x, ...]", R[15], Mem->Read<u32, true>(R[15]), Mem->Read<u32, true>(R[15] + 4));
     /*
      * Known unknown calls:
      *  - 668:  directly on boot (boot screen of some sort?)
@@ -353,6 +365,7 @@ void SH7021::BIOSCall() {
              * */
             BIOSMultiple1BPP16x16To4BPP16x162D6028();
             break;
+        case 0x6a48: // ??
         case 0x6a0e:
         case 0x66d0:
             // same as above, except with DMA channel (r5 argument)

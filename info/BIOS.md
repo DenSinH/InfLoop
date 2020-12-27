@@ -11,6 +11,7 @@
  - 60a4 4x4 2BPP tile unpacking
  - 66d0: memory copy / replace with DMA
  - 6a0e: same as before, but without DMA
+ - 6a48: same as before (I really don't know what the difference is here)
 
 ### 6628
 
@@ -36,7 +37,8 @@ Unpacks 16 tiles (4x4 set of tiles) from `src` to `dest` with an offset `offset`
  
 ### 5f4c
 
-2BPP Kana unpacking call. Unpacks kana packed as 2BPP tiles.
+1BPP 16x16 tiles (Kana) unpacking call. Unpacks tiles/kana packed as 1BPP tiles to 4BPP tiles in the 2D mapping
+that the PPU uses.
 ```
 r4: pointer to tile data
 r5: destination pointer
@@ -72,7 +74,7 @@ I don't know the compression used.
 This call is the same as `445c`, except the data is 4 bits. The table holds the nibbles in bytes,
 but all top nibbles are 0.
 
-### 66d0 and 6a0e
+### 66d0, 6a0e and 6a48
 
 These calls do virtually the same thing, except `66d0` can use a DMA channel specified as second argument.
 The first argument is a pointer to a stream of structs and ushorts. I viewed the structs as:
