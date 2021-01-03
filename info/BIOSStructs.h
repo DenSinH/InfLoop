@@ -22,4 +22,11 @@ struct s_BIOSMemsetData {
     unsigned short padding_e;
 };
 
+struct s_BIOSDecompData {
+    unsigned short width;
+    unsigned short height;
+    void* header;
+    void* data;
+};
+
 #endif //INFLOOP_BIOSSTRUCTS_H

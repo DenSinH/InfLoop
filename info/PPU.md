@@ -78,7 +78,7 @@ Conclusion for now:
 ```
 bits  meaning
 0-10  Tile ID starting from 0 into the tile data memory region
-11    ??? (1 for all Animeland tiles, 0 for casio logo/menu background tiles could have something to do with the mapping)
+11    ??? (1 for all Animeland tiles, 0 for casio logo/menu background tiles could have something to do with the mapping, or transparency (meaning of color 0))
 12-13 Palette, starting from palette offset specified in some IO register
 14    HFlip
 15    VFlip

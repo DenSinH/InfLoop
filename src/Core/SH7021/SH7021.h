@@ -180,8 +180,12 @@ private:
 #include "Instructions/Shift.inl"
 #undef INLINED_INCLUDES
 
-    void BIOSBitmapUncomp445c();
+    u32 TileData1BPPColor6644[2] = { 0, 1 };
+
+    void BIOSDecomp8bit445c();
+    void BIOSDecomp4bit437c();
     void UnpackTile2BPP(u32 src, u32 dest, u32 offset);
+    void BIOS1BPPColorSetup6644();
     void BIOS1BPP16x16To4BPP2D5f4c();
     void BIOS4x4TileUnpack2BPP60a4();
     void BIOSMultiple1BPP16x16To4BPP16x162D6028();
