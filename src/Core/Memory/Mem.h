@@ -171,6 +171,13 @@ T Memory::Read(u32 address) {
 
 template<typename T>
 void Memory::Write(u32 address, T value) {
+//    if ((address >= 0x090136d0) && (address <= 0x090136d0 + 4)) {
+//        *Paused = true;
+//    }
+//    if ((address >= 0x090138c4) && (address <= 0x090138c4 + 8)) {
+//        *Paused = true;
+//    }
+
     switch (address >> 24) {
         case 0x02:
             if (address < 0x0200'2000) {

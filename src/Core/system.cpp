@@ -20,7 +20,14 @@ Loopy::Loopy() {
 //     add_breakpoint(&Breakpoints, 0x0e0135ea);
 //     add_breakpoint(&Breakpoints, 0x0e0135f0);
 //     add_breakpoint(&Breakpoints, 0x0e0135fa);
-    add_breakpoint(&Breakpoints, 0x0e005e2a);
+//      Loop that animeland breaks in:
+//    add_breakpoint(&Breakpoints, 0x0e013aee);
+//    add_breakpoint(&Breakpoints, 0x0e013aca);
+
+//    add_breakpoint(&Breakpoints, 0x0e014134);  // int r0 to double
+//    add_breakpoint(&Breakpoints, 0x0e01413a);  // return
+
+    add_breakpoint(&Breakpoints, 0x0e00fbb8);  // copying girl data animeland
 #endif
 }
 

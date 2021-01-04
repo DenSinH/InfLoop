@@ -55,7 +55,7 @@ void* LoopyPPU::DrawTileData() {
     glTexSubImage2D(GL_TEXTURE_2D, 0,
                     0, 0,
                     TileDataRaw[0].size(), TileDataRaw.size(),
-                    GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, TileDataRaw.data()
+                    GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, TileDataRaw.data()
     );
     return (void*)(intptr_t)TileDataTexture;
 }
@@ -121,7 +121,7 @@ void* LoopyPPU::DrawScreen(u32 i) {
     glTexSubImage2D(GL_TEXTURE_2D, 0,
                     0, 0,
                     ScreenRaw[i][0].size(), ScreenRaw[i].size(),
-                    GL_RGBA, GL_UNSIGNED_SHORT_1_5_5_5_REV, ScreenRaw[i].data()
+                    GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, ScreenRaw[i].data()
     );
     return (void*)(intptr_t)ScreenTexture[i];
 }

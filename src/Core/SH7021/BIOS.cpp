@@ -143,13 +143,14 @@ void SH7021::BIOS1BPPColorSetup6644() {
     u32 high = R[4];
     u32 low = R[5];
     u32 buffer = R[6];
-    u8 value = (high << 4) | (low & 0xf);
 
     TileData1BPPColor6644[0] = low;
     TileData1BPPColor6644[1] = high;
 
     for (int i = 0; i < 32; i++) {
-        Mem->Write<u8>(buffer, value);
+        // set everything to ff, then check in the 1BPP calls whether they are all 0xff
+        // if this is not the case, the user wrote their own values and we can determine the exact format
+        Mem->Write<u8>(buffer, 0xff);
         buffer++;
     }
 }
@@ -189,6 +190,12 @@ void SH7021::BIOSMultiple1BPP16x16To4BPP16x162D6028() {
     u32 count  = R[6];
     u32 buffer = R[7];
     log_debug("BIOS tile unpack: %d x %x -> %x", count, src, dest);
+
+    for (int i = 0; i < 32; i++) {
+        if (Mem->Read<u8>(buffer + i) != 0xff) {
+            log_fatal("BIOS 6028: Buffer not setup with BIOS calls, check format!");
+        }
+    }
 
     for (int i = 0; i < count; i++) {
         // 4 16x16 tiles next to each other in 2D mapping
@@ -267,7 +274,18 @@ void SH7021::BIOS1BPP16x16To4BPP2D5f4c() {
     u32 src    = R[4];
     u32 dest   = R[5];
     u32 offset = R[6];
+    u32 buffer = R[7];
     log_debug("BIOS kana unpack: %x -> %x, +%x", src, dest, offset);
+
+    if (!offset) {
+        log_fatal("BIOS 5f4c: No offset mode, check this!");
+    }
+
+    for (int i = 0; i < 32; i++) {
+        if (Mem->Read<u8>(buffer + i) != 0xff) {
+            log_fatal("BIOS 5f4c: Buffer not setup with BIOS calls, check format!");
+        }
+    }
 
     for (u32 offs : { 0, 0x100 }) {
         for (int dy = 0; dy < 8; dy++) {
@@ -283,7 +301,6 @@ void SH7021::BIOS1BPP16x16To4BPP2D5f4c() {
                         result |= TileData1BPPColor6644[PixelGroup & 1] << 28;
                     }
                     else {
-
                         result |= (PixelGroup & 1) << 28;
                     }
                     PixelGroup >>= 1;
@@ -357,12 +374,15 @@ void SH7021::BIOSMemcpy16_2f74() {
     u32 src  = R[4];
     u32 dest = R[5];
     u32 len  = R[6];
+    i16 acc  = Mem->Read<u16>(src);
     log_debug("BIOS memcpy16: %08x -> %08x x %x", src, dest, len);
 
     for (int i = 0; i < len; i++) {
-        Mem->Write<u16>(dest, Mem->Read<u16>(src));
+        Mem->Write<u16>(dest, acc);
+        log_debug("Transfer %x", acc);
         dest += 2;
         src  += 2;
+        acc  += SignExtend<u16>(Mem->Read<u16>(src));
     }
 }
 
